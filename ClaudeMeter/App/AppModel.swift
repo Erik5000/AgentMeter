@@ -16,9 +16,11 @@ final class AppModel {
     }
 
     var usageData: UsageData?
+    var codexUsageData: CodexUsageData?
     var isLoading: Bool = false
     var isRefreshing: Bool = false
     var errorMessage: String?
+    var codexErrorMessage: String?
     var isSetupComplete: Bool = false
     var isReady: Bool = false
 
@@ -27,6 +29,7 @@ final class AppModel {
     @ObservationIgnored private let settingsRepository: SettingsRepositoryProtocol
     @ObservationIgnored private let keychainRepository: KeychainRepositoryProtocol
     @ObservationIgnored private let usageService: UsageServiceProtocol
+    @ObservationIgnored private let codexUsageService: CodexUsageServiceProtocol?
     @ObservationIgnored private let notificationService: NotificationServiceProtocol
     @ObservationIgnored private let sessionKeyImportService: SessionKeyImportServiceProtocol
 
@@ -44,12 +47,14 @@ final class AppModel {
         settingsRepository: SettingsRepositoryProtocol = SettingsRepository(),
         keychainRepository: KeychainRepositoryProtocol = KeychainRepository(),
         usageService: UsageServiceProtocol? = nil,
+        codexUsageService: CodexUsageServiceProtocol? = nil,
         notificationService: NotificationServiceProtocol? = nil,
         sessionKeyImportService: SessionKeyImportServiceProtocol = SessionKeyImportService()
     ) {
         self.settingsRepository = settingsRepository
         self.keychainRepository = keychainRepository
         self.sessionKeyImportService = sessionKeyImportService
+        self.codexUsageService = codexUsageService
 
         let networkService = NetworkService()
         let cacheRepository = CacheRepository()
@@ -105,15 +110,39 @@ final class AppModel {
             isRefreshing = false
         }
 
+        let claudeTask = Task {
+            try await usageService.fetchUsage(forceRefresh: forceRefresh)
+        }
+        let shouldFetchCodex = settings.isCodexUsageShown
+        let codexTask: Task<CodexUsageData, Error>? = {
+            guard shouldFetchCodex, let codexUsageService else { return nil }
+            return Task {
+                try await codexUsageService.fetchUsage()
+            }
+        }()
+
         do {
-            let data = try await usageService.fetchUsage(forceRefresh: forceRefresh)
+            let data = try await claudeTask.value
             usageData = data
+            errorMessage = nil
             await notificationService.evaluateThresholds(
                 usageData: data,
                 settings: settings
             )
         } catch {
             errorMessage = error.localizedDescription
+        }
+
+        if shouldFetchCodex, let codexTask {
+            do {
+                codexUsageData = try await codexTask.value
+                codexErrorMessage = nil
+            } catch {
+                codexErrorMessage = error.localizedDescription
+            }
+        } else {
+            codexUsageData = nil
+            codexErrorMessage = nil
         }
     }
 
@@ -173,6 +202,8 @@ final class AppModel {
         isSetupComplete = false
         usageData = nil
         errorMessage = nil
+        codexUsageData = nil
+        codexErrorMessage = nil
         refreshTask?.cancel()
     }
 
@@ -207,6 +238,10 @@ final class AppModel {
 
         if previous.refreshInterval != settings.refreshInterval {
             startRefreshLoop()
+        }
+
+        if previous.isCodexUsageShown != settings.isCodexUsageShown, isSetupComplete {
+            Task { await refreshUsage(forceRefresh: true) }
         }
     }
 
@@ -243,9 +278,11 @@ final class AppModel {
         usageData: UsageData?,
         isSetupComplete: Bool,
         errorMessage: String?,
-        isLoading: Bool
+        isLoading: Bool,
+        codexUsageData: CodexUsageData? = nil
     ) {
         self.usageData = usageData
+        self.codexUsageData = codexUsageData
         self.isSetupComplete = isSetupComplete
         self.errorMessage = errorMessage
         self.isLoading = isLoading

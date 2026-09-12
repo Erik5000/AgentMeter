@@ -86,6 +86,25 @@ final class MenuBarIconRendererTests: XCTestCase {
         XCTAssertTrue(image.isTemplate)
     }
 
+    func test_dualBarIconRendersWhenCodexColumnIsIncluded() {
+        let renderer = MenuBarIconRenderer()
+
+        let image = renderer.render(
+            percentage: 62,
+            status: .warning,
+            isLoading: false,
+            isStale: false,
+            iconStyle: .dualBar,
+            weeklyPercentage: 62,
+            showsCodex: true,
+            codexSession: 13,
+            codexWeekly: 24
+        )
+
+        XCTAssertGreaterThan(image.size.width, 0)
+        XCTAssertGreaterThan(image.size.height, 0)
+    }
+
     func test_menuBarIconIsRenderedAsNonTemplateImageWhenColorModeSelected() {
         let renderer = MenuBarIconRenderer()
 

@@ -62,6 +62,7 @@ struct SettingsView: View {
                 sessionKeySection
                 refreshIntervalSection
                 sonnetUsageSection
+                codexUsageSection
                 resetTimeSection
                 iconStyleSection
                 launchAtLoginSection
@@ -233,6 +234,28 @@ struct SettingsView: View {
         .clipShape(RoundedRectangle(cornerRadius: 8))
     }
 
+    // MARK: - Codex Usage Section
+
+    private var codexUsageSection: some View {
+        HStack {
+            VStack(alignment: .leading, spacing: 4) {
+                Text("Show Codex Usage")
+                    .font(.subheadline)
+                Text("Display usage from your signed-in Codex app")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+
+            Spacer()
+
+            Toggle("", isOn: $appModel.settings.isCodexUsageShown)
+                .labelsHidden()
+        }
+        .padding()
+        .background(.quaternary.opacity(0.3))
+        .clipShape(RoundedRectangle(cornerRadius: 8))
+    }
+
     // MARK: - Reset Time Section
 
     private var resetTimeSection: some View {
@@ -284,7 +307,8 @@ struct SettingsView: View {
 
             IconStylePicker(
                 selection: $appModel.settings.iconStyle,
-                isColored: appModel.settings.isColoredIcon
+                isColored: appModel.settings.isColoredIcon,
+                showsCodex: appModel.settings.isCodexUsageShown
             )
         }
         .padding()

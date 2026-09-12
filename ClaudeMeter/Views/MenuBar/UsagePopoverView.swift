@@ -16,15 +16,13 @@ struct UsagePopoverView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            // Header
             HStack {
-                Text("Claude Usage")
+                Text("Usage")
                     .font(.title2)
                     .fontWeight(.bold)
 
                 Spacer()
 
-                // Refresh button
                 Button(action: {
                     Task {
                         await appModel.refreshUsage(forceRefresh: true)
@@ -46,7 +44,6 @@ struct UsagePopoverView: View {
 
             Divider()
 
-            // Error banner
             if let errorMessage = appModel.errorMessage {
                 VStack(alignment: .leading, spacing: 8) {
                     HStack(spacing: 8) {
@@ -60,7 +57,6 @@ struct UsagePopoverView: View {
                     }
 
                     HStack(spacing: 8) {
-                        // Retry button for recoverable errors
                         Button("Retry") {
                             Task {
                                 await appModel.refreshUsage(forceRefresh: true)
@@ -68,7 +64,6 @@ struct UsagePopoverView: View {
                         }
                         .buttonStyle(.bordered)
 
-                        // Update Key button for authentication errors
                         if errorMessage.contains("invalid") || errorMessage.contains("expired") || errorMessage.contains("authentication") {
                             Button("Update Session Key") {
                                 openSettingsFront()
@@ -83,30 +78,50 @@ struct UsagePopoverView: View {
                 Divider()
             }
 
-            // Content
             if let usageData = appModel.usageData {
                 ScrollView {
-                    VStack(spacing: 16) {
-                        // Session usage card
-                        UsageCardView(
-                            title: "5-Hour Session",
-                            usageLimit: usageData.sessionUsage,
-                            icon: "gauge.with.dots.needle.67percent",
-                            windowDuration: Constants.Pacing.sessionWindow,
-                            showsExactResetTime: appModel.settings.isResetTimeShown,
-                            usesTimeOnlyResetTimestamp: true
-                        )
+                    VStack(spacing: appModel.settings.isCodexUsageShown ? 12 : 16) {
+                        if appModel.settings.isCodexUsageShown,
+                           let codexErrorMessage = appModel.codexErrorMessage {
+                            Label(codexErrorMessage, systemImage: "exclamationmark.triangle.fill")
+                                .font(.caption)
+                                .foregroundStyle(.orange)
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                        }
 
-                        // Weekly usage card
-                        UsageCardView(
-                            title: "Weekly Usage",
-                            usageLimit: usageData.weeklyUsage,
-                            icon: "calendar",
-                            windowDuration: Constants.Pacing.weeklyWindow,
-                            showsExactResetTime: appModel.settings.isResetTimeShown
-                        )
+                        if appModel.settings.isCodexUsageShown {
+                            UsageComparisonCardView(
+                                title: "5-Hour Session",
+                                icon: "clock.arrow.circlepath",
+                                metrics: sessionMetrics(for: usageData),
+                                showsExactResetTime: appModel.settings.isResetTimeShown
+                            )
 
-                        // Sonnet usage card (conditional rendering)
+                            UsageComparisonCardView(
+                                title: "Weekly Usage",
+                                icon: "calendar",
+                                metrics: weeklyMetrics(for: usageData),
+                                showsExactResetTime: appModel.settings.isResetTimeShown
+                            )
+                        } else {
+                            UsageCardView(
+                                title: "5-Hour Session",
+                                usageLimit: usageData.sessionUsage,
+                                icon: "gauge.with.dots.needle.67percent",
+                                windowDuration: Constants.Pacing.sessionWindow,
+                                showsExactResetTime: appModel.settings.isResetTimeShown,
+                                usesTimeOnlyResetTimestamp: true
+                            )
+
+                            UsageCardView(
+                                title: "Weekly Usage",
+                                usageLimit: usageData.weeklyUsage,
+                                icon: "calendar",
+                                windowDuration: Constants.Pacing.weeklyWindow,
+                                showsExactResetTime: appModel.settings.isResetTimeShown
+                            )
+                        }
+
                         if appModel.settings.isSonnetUsageShown, let sonnetUsage = usageData.sonnetUsage {
                             UsageCardView(
                                 title: "Weekly Sonnet",
@@ -120,7 +135,6 @@ struct UsagePopoverView: View {
                     .padding()
                 }
             } else {
-                // Loading state
                 VStack(spacing: 16) {
                     ProgressView()
                     Text("Loading usage data...")
@@ -133,7 +147,6 @@ struct UsagePopoverView: View {
 
             Divider()
 
-            // Footer with settings button
             HStack {
                 Button("Settings") {
                     openSettingsFront()
@@ -153,10 +166,84 @@ struct UsagePopoverView: View {
             }
             .padding()
         }
-        .frame(width: 320, height: 460)
+        .frame(width: appModel.settings.isCodexUsageShown ? 380 : 320, height: 460)
         .background(Color(nsColor: .windowBackgroundColor))
         .accessibilityElement(children: .contain)
         .accessibilityLabel("Usage Dashboard")
+    }
+
+    private var codexPlaceholder: String {
+        if appModel.codexErrorMessage != nil {
+            return "Unavailable"
+        }
+        if appModel.codexUsageData == nil {
+            return "Loading…"
+        }
+        return "Unavailable"
+    }
+
+    private func sessionMetrics(for usageData: UsageData) -> [UsageProviderMetric] {
+        var metrics = [
+            UsageProviderMetric(
+                id: "claude-session",
+                name: "Claude",
+                detail: nil,
+                icon: "sparkles",
+                usageLimit: usageData.sessionUsage,
+                windowDuration: Constants.Pacing.sessionWindow,
+                usesTimeOnlyResetTimestamp: true,
+                placeholder: "Unavailable"
+            )
+        ]
+
+        if appModel.settings.isCodexUsageShown {
+            metrics.append(
+                UsageProviderMetric(
+                    id: "codex-session",
+                    name: "Codex",
+                    detail: appModel.codexUsageData?.planType?.capitalized,
+                    icon: "terminal",
+                    usageLimit: appModel.codexUsageData?.sessionUsage,
+                    windowDuration: appModel.codexUsageData?.sessionWindowDuration,
+                    usesTimeOnlyResetTimestamp: true,
+                    placeholder: codexPlaceholder
+                )
+            )
+        }
+
+        return metrics
+    }
+
+    private func weeklyMetrics(for usageData: UsageData) -> [UsageProviderMetric] {
+        var metrics = [
+            UsageProviderMetric(
+                id: "claude-weekly",
+                name: "Claude",
+                detail: nil,
+                icon: "sparkles",
+                usageLimit: usageData.weeklyUsage,
+                windowDuration: Constants.Pacing.weeklyWindow,
+                usesTimeOnlyResetTimestamp: false,
+                placeholder: "Unavailable"
+            )
+        ]
+
+        if appModel.settings.isCodexUsageShown {
+            metrics.append(
+                UsageProviderMetric(
+                    id: "codex-weekly",
+                    name: "Codex",
+                    detail: appModel.codexUsageData?.planType?.capitalized,
+                    icon: "terminal",
+                    usageLimit: appModel.codexUsageData?.weeklyUsage,
+                    windowDuration: appModel.codexUsageData?.weeklyWindowDuration,
+                    usesTimeOnlyResetTimestamp: false,
+                    placeholder: codexPlaceholder
+                )
+            )
+        }
+
+        return metrics
     }
 
     private func openSettingsFront() {

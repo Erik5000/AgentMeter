@@ -108,6 +108,69 @@ final class AppModelTests: XCTestCase {
         XCTAssertEqual(notificationService.lastEvaluatedUsageData, expectedUsage)
     }
 
+    func test_refreshingUsage_alsoShowsCodexUsage() async {
+        let expectedUsage = makeUsageData(percentage: TestConstants.sessionPercentage)
+        let expectedCodexUsage = makeCodexUsageData()
+        let usageService = UsageServiceStub(fetchUsageResult: .success(expectedUsage))
+        let codexUsageService = CodexUsageServiceStub(result: .success(expectedCodexUsage))
+        let appModel = AppModel(
+            settingsRepository: SettingsRepositoryFake(),
+            keychainRepository: KeychainRepositoryFake(),
+            usageService: usageService,
+            codexUsageService: codexUsageService,
+            notificationService: NotificationServiceSpy()
+        )
+        appModel.isSetupComplete = true
+
+        await appModel.refreshUsage(forceRefresh: true)
+
+        XCTAssertEqual(appModel.usageData, expectedUsage)
+        XCTAssertEqual(appModel.codexUsageData, expectedCodexUsage)
+        XCTAssertNil(appModel.codexErrorMessage)
+    }
+
+    func test_refreshingUsage_keepsClaudeUsageWhenCodexFails() async {
+        let expectedUsage = makeUsageData(percentage: TestConstants.sessionPercentage)
+        let codexFailure = TestError(message: "Codex unavailable")
+        let usageService = UsageServiceStub(fetchUsageResult: .success(expectedUsage))
+        let codexUsageService = CodexUsageServiceStub(result: .failure(codexFailure))
+        let appModel = AppModel(
+            settingsRepository: SettingsRepositoryFake(),
+            keychainRepository: KeychainRepositoryFake(),
+            usageService: usageService,
+            codexUsageService: codexUsageService,
+            notificationService: NotificationServiceSpy()
+        )
+        appModel.isSetupComplete = true
+
+        await appModel.refreshUsage(forceRefresh: true)
+
+        XCTAssertEqual(appModel.usageData, expectedUsage)
+        XCTAssertNil(appModel.errorMessage)
+        XCTAssertEqual(appModel.codexErrorMessage, codexFailure.localizedDescription)
+    }
+
+    func test_refreshingUsage_skipsCodexWhenSettingIsDisabled() async {
+        let expectedUsage = makeUsageData(percentage: TestConstants.sessionPercentage)
+        let usageService = UsageServiceStub(fetchUsageResult: .success(expectedUsage))
+        let codexUsageService = CodexUsageServiceStub(result: .success(makeCodexUsageData()))
+        let appModel = AppModel(
+            settingsRepository: SettingsRepositoryFake(),
+            keychainRepository: KeychainRepositoryFake(),
+            usageService: usageService,
+            codexUsageService: codexUsageService,
+            notificationService: NotificationServiceSpy()
+        )
+        appModel.isSetupComplete = true
+        appModel.settings.isCodexUsageShown = false
+
+        await appModel.refreshUsage(forceRefresh: true)
+
+        XCTAssertEqual(appModel.usageData, expectedUsage)
+        XCTAssertNil(appModel.codexUsageData)
+        XCTAssertNil(appModel.codexErrorMessage)
+    }
+
     func test_refreshingUsage_showsErrorWhenFetchFails() async {
         let failure = TestError(message: TestConstants.fetchFailureMessage)
         let usageService = UsageServiceStub(fetchUsageResult: .failure(failure))
@@ -413,6 +476,23 @@ private func makeUsageData(percentage: Double) -> UsageData {
         sessionUsage: sessionUsage,
         weeklyUsage: weeklyUsage,
         sonnetUsage: nil,
+        lastUpdated: Date()
+    )
+}
+
+private func makeCodexUsageData() -> CodexUsageData {
+    CodexUsageData(
+        sessionUsage: UsageLimit(
+            utilization: 32,
+            resetAt: Date().addingTimeInterval(Constants.Pacing.sessionWindow)
+        ),
+        sessionWindowMinutes: 300,
+        weeklyUsage: UsageLimit(
+            utilization: 25,
+            resetAt: Date().addingTimeInterval(Constants.Pacing.weeklyWindow)
+        ),
+        weeklyWindowMinutes: 10_080,
+        planType: "plus",
         lastUpdated: Date()
     )
 }

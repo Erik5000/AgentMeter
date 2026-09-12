@@ -14,7 +14,7 @@ struct ClaudeMeterApp: App {
     @State private var appModel: AppModel
 
     init() {
-        let model = AppModel()
+        let model = AppModel(codexUsageService: CodexUsageService())
         _appModel = State(initialValue: model)
         appDelegate.configure(appModel: model)
 

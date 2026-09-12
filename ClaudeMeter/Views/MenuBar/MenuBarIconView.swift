@@ -15,8 +15,33 @@ struct MenuBarIconView: View {
     let isStale: Bool
     let iconStyle: IconStyle
     var weeklyPercentage: Double = 0  // Optional, used by dualBar style
+    var showsCodex: Bool = false
+    var claudeSession: Double = 0
+    var claudeWeekly: Double = 0
+    var codexSession: Double = 0
+    var codexWeekly: Double = 0
 
     var body: some View {
+        if showsCodex, !isLoading {
+            DualBarIcon(
+                percentage: percentage,
+                weeklyPercentage: weeklyPercentage,
+                status: status,
+                isLoading: isLoading,
+                isStale: isStale,
+                showsCodex: true,
+                claudeSession: claudeSession,
+                claudeWeekly: claudeWeekly,
+                codexSession: codexSession,
+                codexWeekly: codexWeekly
+            )
+        } else {
+            singleProvider(percentage: percentage, status: status)
+        }
+    }
+
+    @ViewBuilder
+    private func singleProvider(percentage: Double, status: UsageStatus) -> some View {
         switch iconStyle {
         case .battery:
             BatteryIcon(percentage: percentage, status: status, isLoading: isLoading, isStale: isStale)
@@ -27,7 +52,18 @@ struct MenuBarIconView: View {
         case .segments:
             SegmentedBarIcon(percentage: percentage, status: status, isLoading: isLoading, isStale: isStale)
         case .dualBar:
-            DualBarIcon(percentage: percentage, weeklyPercentage: weeklyPercentage, status: status, isLoading: isLoading, isStale: isStale)
+            DualBarIcon(
+                percentage: percentage,
+                weeklyPercentage: weeklyPercentage,
+                status: status,
+                isLoading: isLoading,
+                isStale: isStale,
+                showsCodex: showsCodex,
+                claudeSession: claudeSession,
+                claudeWeekly: claudeWeekly,
+                codexSession: codexSession,
+                codexWeekly: codexWeekly
+            )
         case .gauge:
             GaugeIcon(percentage: percentage, status: status, isLoading: isLoading, isStale: isStale)
         }

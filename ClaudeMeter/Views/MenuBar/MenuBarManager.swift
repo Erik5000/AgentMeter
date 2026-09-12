@@ -97,9 +97,11 @@ final class MenuBarManager {
     private func observeIconUpdates() {
         withObservationTracking {
             _ = appModel.usageData
+            _ = appModel.codexUsageData
             _ = appModel.isLoading
             _ = appModel.settings.iconStyle
             _ = appModel.settings.isColoredIcon
+            _ = appModel.settings.isCodexUsageShown
         } onChange: { [weak self] in
             Task { @MainActor [weak self] in
                 guard let self else { return }
@@ -112,13 +114,27 @@ final class MenuBarManager {
     private func updateIcon() {
         guard let button = statusItem?.button else { return }
 
-        let percentage = clamped(appModel.usageData?.sessionUsage.percentage ?? 0)
-        let weeklyPercentage = clamped(appModel.usageData?.weeklyUsage.percentage ?? 0)
-        let status = appModel.usageData?.primaryStatus ?? .safe
-        let isStale = appModel.usageData?.isStale ?? false
-        let isLoading = appModel.isLoading
+        let snapshot = MenuBarUsageSnapshot.make(
+            claude: appModel.usageData,
+            codex: appModel.codexUsageData,
+            isCodexUsageShown: appModel.settings.isCodexUsageShown,
+            isLoading: appModel.isLoading
+        )
+        let percentage = clamped(snapshot.displayedPercentage)
+        let weeklyPercentage = clamped(snapshot.weeklyPercentage)
+        let status = snapshot.status
+        let isStale = snapshot.isStale
+        let isLoading = snapshot.isLoading
         let style = appModel.settings.iconStyle
         let isColored = appModel.settings.isColoredIcon
+        let showsCodex = snapshot.showsCodex
+        let claudeSession = clamped(snapshot.claudeSession)
+        let claudeWeekly = clamped(snapshot.claudeWeekly)
+        let codexSession = clamped(snapshot.codexSession ?? 0)
+        let codexWeekly = clamped(snapshot.codexWeekly ?? 0)
+
+        button.toolTip = snapshot.tooltip
+        button.setAccessibilityLabel(snapshot.tooltip)
 
         if let cachedImage = iconCache.get(
             percentage: percentage,
@@ -127,7 +143,12 @@ final class MenuBarManager {
             isStale: isStale,
             iconStyle: style,
             weeklyPercentage: weeklyPercentage,
-            isColored: isColored
+            isColored: isColored,
+            showsCodex: showsCodex,
+            claudeSession: claudeSession,
+            claudeWeekly: claudeWeekly,
+            codexSession: codexSession,
+            codexWeekly: codexWeekly
         ) {
             button.image = cachedImage
             return
@@ -140,7 +161,12 @@ final class MenuBarManager {
             isStale: isStale,
             iconStyle: style,
             weeklyPercentage: weeklyPercentage,
-            isColored: isColored
+            isColored: isColored,
+            showsCodex: showsCodex,
+            claudeSession: claudeSession,
+            claudeWeekly: claudeWeekly,
+            codexSession: codexSession,
+            codexWeekly: codexWeekly
         )
 
         iconCache.set(
@@ -151,7 +177,12 @@ final class MenuBarManager {
             isStale: isStale,
             iconStyle: style,
             weeklyPercentage: weeklyPercentage,
-            isColored: isColored
+            isColored: isColored,
+            showsCodex: showsCodex,
+            claudeSession: claudeSession,
+            claudeWeekly: claudeWeekly,
+            codexSession: codexSession,
+            codexWeekly: codexWeekly
         )
 
         button.image = image

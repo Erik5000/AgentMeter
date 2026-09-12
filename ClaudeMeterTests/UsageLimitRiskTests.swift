@@ -85,4 +85,12 @@ final class UsageLimitRiskTests: XCTestCase {
             "now"
         )
     }
+
+    func test_compactResetDescription_usesShortUnits() {
+        XCTAssertEqual(UsageLimit.compactResetDescription(for: 45.2 * 60), "in 46m")
+        XCTAssertEqual(UsageLimit.compactResetDescription(for: 3.1 * 60 * 60), "in 4h")
+        XCTAssertEqual(UsageLimit.compactResetDescription(for: 40 * 60 * 60), "in 1d 16h")
+        XCTAssertEqual(UsageLimit.compactResetDescription(for: 2 * 24 * 60 * 60), "in 2d")
+        XCTAssertEqual(UsageLimit.compactResetDescription(for: -60), "now")
+    }
 }

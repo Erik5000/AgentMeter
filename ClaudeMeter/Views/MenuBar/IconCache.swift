@@ -22,7 +22,12 @@ final class IconCache {
         isStale: Bool,
         iconStyle: IconStyle,
         weeklyPercentage: Double,
-        isColored: Bool
+        isColored: Bool,
+        showsCodex: Bool = false,
+        claudeSession: Double = 0,
+        claudeWeekly: Double = 0,
+        codexSession: Double = 0,
+        codexWeekly: Double = 0
     ) -> NSImage? {
         cache.object(forKey: cacheKey(
             percentage: percentage,
@@ -31,7 +36,12 @@ final class IconCache {
             isStale: isStale,
             iconStyle: iconStyle,
             weeklyPercentage: weeklyPercentage,
-            isColored: isColored
+            isColored: isColored,
+            showsCodex: showsCodex,
+            claudeSession: claudeSession,
+            claudeWeekly: claudeWeekly,
+            codexSession: codexSession,
+            codexWeekly: codexWeekly
         ))
     }
 
@@ -43,7 +53,12 @@ final class IconCache {
         isStale: Bool,
         iconStyle: IconStyle,
         weeklyPercentage: Double,
-        isColored: Bool
+        isColored: Bool,
+        showsCodex: Bool = false,
+        claudeSession: Double = 0,
+        claudeWeekly: Double = 0,
+        codexSession: Double = 0,
+        codexWeekly: Double = 0
     ) {
         cache.setObject(
             image,
@@ -54,7 +69,12 @@ final class IconCache {
                 isStale: isStale,
                 iconStyle: iconStyle,
                 weeklyPercentage: weeklyPercentage,
-                isColored: isColored
+                isColored: isColored,
+                showsCodex: showsCodex,
+                claudeSession: claudeSession,
+                claudeWeekly: claudeWeekly,
+                codexSession: codexSession,
+                codexWeekly: codexWeekly
             )
         )
     }
@@ -66,10 +86,19 @@ final class IconCache {
         isStale: Bool,
         iconStyle: IconStyle,
         weeklyPercentage: Double,
-        isColored: Bool
+        isColored: Bool,
+        showsCodex: Bool,
+        claudeSession: Double,
+        claudeWeekly: Double,
+        codexSession: Double,
+        codexWeekly: Double
     ) -> NSString {
         let percent = String(format: "%.2f", percentage)
         let weekly = String(format: "%.2f", weeklyPercentage)
-        return "\(percent)|\(weekly)|\(status.rawValue)|\(isLoading)|\(isStale)|\(iconStyle.rawValue)|\(isColored)" as NSString
+        let claudeSessionValue = String(format: "%.2f", claudeSession)
+        let claudeWeeklyValue = String(format: "%.2f", claudeWeekly)
+        let codexSessionValue = String(format: "%.2f", codexSession)
+        let codexWeeklyValue = String(format: "%.2f", codexWeekly)
+        return "\(percent)|\(weekly)|\(status.rawValue)|\(isLoading)|\(isStale)|\(iconStyle.rawValue)|\(isColored)|\(showsCodex)|\(claudeSessionValue)|\(claudeWeeklyValue)|\(codexSessionValue)|\(codexWeeklyValue)" as NSString
     }
 }

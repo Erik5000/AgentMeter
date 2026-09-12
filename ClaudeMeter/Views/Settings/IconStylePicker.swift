@@ -11,6 +11,7 @@ import SwiftUI
 struct IconStylePicker: View {
     @Binding var selection: IconStyle
     let isColored: Bool
+    var showsCodex: Bool = false
     var onSelectionChanged: ((IconStyle) -> Void)? = nil
 
     private let columns = [
@@ -25,7 +26,8 @@ struct IconStylePicker: View {
                 IconStyleCard(
                     style: style,
                     isSelected: selection == style,
-                    isColored: isColored
+                    isColored: isColored,
+                    showsCodex: showsCodex
                 )
                 .contentShape(Rectangle())
                 .onTapGesture {
@@ -42,10 +44,13 @@ struct IconStyleCard: View {
     let style: IconStyle
     let isSelected: Bool
     let isColored: Bool
+    var showsCodex: Bool = false
 
     /// Preview percentages to show
     private let previewPercentage: Double = 65
     private let previewWeeklyPercentage: Double = 45
+    private let previewCodexSession: Double = 28
+    private let previewCodexWeekly: Double = 18
     private let previewStatus: UsageStatus = .warning
 
     var body: some View {
@@ -94,7 +99,12 @@ struct IconStyleCard: View {
             isStale: false,
             iconStyle: style,
             weeklyPercentage: previewWeeklyPercentage,
-            isColored: isColored
+            isColored: isColored,
+            showsCodex: showsCodex,
+            claudeSession: previewPercentage,
+            claudeWeekly: previewWeeklyPercentage,
+            codexSession: previewCodexSession,
+            codexWeekly: previewCodexWeekly
         ))
             .renderingMode(isColored ? .original : .template)
             .foregroundStyle(.primary)

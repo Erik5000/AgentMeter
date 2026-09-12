@@ -19,7 +19,8 @@ enum DemoDataFactory {
                 usageData: makeUsageData(sessionPercentage: 42, weeklyPercentage: 10),
                 isSetupComplete: true,
                 errorMessage: nil,
-                isLoading: false
+                isLoading: false,
+                codexUsageData: makeCodexUsageData(sessionPercentage: 18, weeklyPercentage: 12)
             )
 
         case .warningUsage:
@@ -27,7 +28,8 @@ enum DemoDataFactory {
                 usageData: makeUsageData(sessionPercentage: 72, weeklyPercentage: 45),
                 isSetupComplete: true,
                 errorMessage: nil,
-                isLoading: false
+                isLoading: false,
+                codexUsageData: makeCodexUsageData(sessionPercentage: 38, weeklyPercentage: 22)
             )
 
         case .criticalUsage:
@@ -35,7 +37,8 @@ enum DemoDataFactory {
                 usageData: makeUsageData(sessionPercentage: 92, weeklyPercentage: 85),
                 isSetupComplete: true,
                 errorMessage: nil,
-                isLoading: false
+                isLoading: false,
+                codexUsageData: makeCodexUsageData(sessionPercentage: 61, weeklyPercentage: 40)
             )
 
         case .exceededUsage:
@@ -43,7 +46,8 @@ enum DemoDataFactory {
                 usageData: makeUsageData(sessionPercentage: 105, weeklyPercentage: 100),
                 isSetupComplete: true,
                 errorMessage: nil,
-                isLoading: false
+                isLoading: false,
+                codexUsageData: makeCodexUsageData(sessionPercentage: 88, weeklyPercentage: 71)
             )
 
         case .withSonnet:
@@ -55,7 +59,8 @@ enum DemoDataFactory {
                 ),
                 isSetupComplete: true,
                 errorMessage: nil,
-                isLoading: false
+                isLoading: false,
+                codexUsageData: makeCodexUsageData(sessionPercentage: 21, weeklyPercentage: 16)
             )
             appModel.settings.isSonnetUsageShown = true
 
@@ -108,6 +113,23 @@ enum DemoDataFactory {
             sessionUsage: sessionUsage,
             weeklyUsage: weeklyUsage,
             sonnetUsage: sonnetUsage,
+            lastUpdated: Date()
+        )
+    }
+
+    private static func makeCodexUsageData(
+        sessionPercentage: Double,
+        weeklyPercentage: Double
+    ) -> CodexUsageData {
+        let sessionResetAt = Date().addingTimeInterval(3 * 3600)
+        let weeklyResetAt = Date().addingTimeInterval(6 * 24 * 3600)
+
+        return CodexUsageData(
+            sessionUsage: UsageLimit(utilization: sessionPercentage, resetAt: sessionResetAt),
+            sessionWindowMinutes: 300,
+            weeklyUsage: UsageLimit(utilization: weeklyPercentage, resetAt: weeklyResetAt),
+            weeklyWindowMinutes: 10_080,
+            planType: "plus",
             lastUpdated: Date()
         )
     }

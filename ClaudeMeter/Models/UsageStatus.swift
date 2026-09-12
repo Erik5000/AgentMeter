@@ -39,4 +39,24 @@ enum UsageStatus: String, Codable, Sendable {
         case .critical: return "Critical: near or at limit"
         }
     }
+
+    /// Rank used to break ties when two limits share a percentage.
+    var rank: Int {
+        switch self {
+        case .safe: return 0
+        case .warning: return 1
+        case .critical: return 2
+        }
+    }
+
+    static func forPercentage(_ percentage: Double) -> UsageStatus {
+        switch percentage {
+        case 0..<Constants.Thresholds.Status.warningStart:
+            return .safe
+        case Constants.Thresholds.Status.warningStart..<Constants.Thresholds.Status.criticalStart:
+            return .warning
+        default:
+            return .critical
+        }
+    }
 }

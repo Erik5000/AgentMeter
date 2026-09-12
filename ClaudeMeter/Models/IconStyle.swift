@@ -37,7 +37,7 @@ enum IconStyle: String, Codable, CaseIterable, Identifiable, Sendable {
         case .circular: return "Circular gauge with percentage in center"
         case .minimal: return "Minimal percentage only"
         case .segments: return "Segmented bar indicator"
-        case .dualBar: return "Two bars showing session and weekly usage"
+        case .dualBar: return "Session and weekly bars; Codex adds a second column"
         case .gauge: return "Gauge indicator"
         }
     }

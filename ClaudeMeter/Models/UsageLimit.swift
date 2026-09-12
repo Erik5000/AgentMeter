@@ -30,14 +30,7 @@ extension UsageLimit {
     /// Status level based on percentage
     /// Uses thresholds from Constants.Thresholds.Status
     var status: UsageStatus {
-        switch utilization {
-        case 0..<Constants.Thresholds.Status.warningStart:
-            return .safe
-        case Constants.Thresholds.Status.warningStart..<Constants.Thresholds.Status.criticalStart:
-            return .warning
-        default:
-            return .critical
-        }
+        UsageStatus.forPercentage(utilization)
     }
 
     /// Human-readable reset time, rounded up to avoid understating remaining time.
@@ -73,6 +66,41 @@ extension UsageLimit {
         }
 
         return "in \(days) \(Self.unit("day", count: days)) \(hours) \(Self.unit("hour", count: hours))"
+    }
+
+    /// Compact reset label for side-by-side comparison cards.
+    var compactResetDescription: String {
+        Self.compactResetDescription(for: resetAt.timeIntervalSinceNow)
+    }
+
+    static func compactResetDescription(for remaining: TimeInterval) -> String {
+        guard remaining > 0 else {
+            return "now"
+        }
+
+        let minute: TimeInterval = 60
+        let hour: TimeInterval = 60 * minute
+        let day: TimeInterval = 24 * hour
+
+        if remaining < hour {
+            let minutes = max(1, Int(ceil(remaining / minute)))
+            return "in \(minutes)m"
+        }
+
+        if remaining < day {
+            let hours = Int(ceil(remaining / hour))
+            return "in \(hours)h"
+        }
+
+        let roundedHours = Int(ceil(remaining / hour))
+        let days = roundedHours / 24
+        let hours = roundedHours % 24
+
+        if hours == 0 {
+            return "in \(days)d"
+        }
+
+        return "in \(days)d \(hours)h"
     }
 
     private static func unit(_ singular: String, count: Int) -> String {
