@@ -10,7 +10,7 @@ import os
 
 /// Actor-isolated network service using URLSession
 actor NetworkService: NetworkServiceProtocol {
-    private static let logger = Logger(subsystem: "com.claudemeter", category: "NetworkService")
+    private static let logger = Logger(subsystem: AppIdentity.loggerSubsystem, category: "NetworkService")
     private let session: URLSession
 
     init(configuration: URLSessionConfiguration = .default) {

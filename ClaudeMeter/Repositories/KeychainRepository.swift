@@ -10,8 +10,8 @@ import Security
 
 /// Actor-isolated repository for secure Keychain operations
 actor KeychainRepository: KeychainRepositoryProtocol {
-    private let serviceName = "com.claudemeter.sessionkey"
-    private let accessGroup = "$(AppIdentifierPrefix)com.claudemeter"
+    private let serviceName = AppIdentity.keychainService
+    private let accessGroup = AppIdentity.keychainAccessGroup
 
     /// Save session key to Keychain with security attributes
     func save(sessionKey: String, account: String) async throws {

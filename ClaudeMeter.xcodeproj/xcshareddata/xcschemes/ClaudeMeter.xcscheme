@@ -16,7 +16,7 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "68EC6CB62ED4AD85009E99EE"
-               BuildableName = "ClaudeMeter.app"
+               BuildableName = "AgentMeter.app"
                BlueprintName = "ClaudeMeter"
                ReferencedContainer = "container:ClaudeMeter.xcodeproj">
             </BuildableReference>
@@ -58,7 +58,7 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "68EC6CB62ED4AD85009E99EE"
-            BuildableName = "ClaudeMeter.app"
+            BuildableName = "AgentMeter.app"
             BlueprintName = "ClaudeMeter"
             ReferencedContainer = "container:ClaudeMeter.xcodeproj">
          </BuildableReference>
@@ -109,7 +109,7 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "68EC6CB62ED4AD85009E99EE"
-            BuildableName = "ClaudeMeter.app"
+            BuildableName = "AgentMeter.app"
             BlueprintName = "ClaudeMeter"
             ReferencedContainer = "container:ClaudeMeter.xcodeproj">
          </BuildableReference>

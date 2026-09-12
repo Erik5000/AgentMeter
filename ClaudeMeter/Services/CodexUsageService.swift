@@ -78,8 +78,8 @@ actor CodexUsageService: CodexUsageServiceProtocol {
                     "id": 0,
                     "params": [
                         "clientInfo": [
-                            "name": "claudemeter",
-                            "title": "ClaudeMeter",
+                            "name": AppIdentity.codexClientName,
+                            "title": AppIdentity.displayName,
                             "version": appVersion
                         ]
                     ]

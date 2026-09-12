@@ -4,7 +4,7 @@ import SweetCookieKit
 
 /// Imports Claude session keys from local browser cookies.
 actor SessionKeyImportService: SessionKeyImportServiceProtocol {
-    private static let logger = Logger(subsystem: "com.claudemeter", category: "SessionKeyImportService")
+    private static let logger = Logger(subsystem: AppIdentity.loggerSubsystem, category: "SessionKeyImportService")
 
     private let cookieClient: BrowserCookieClient
     private let browserImportOrder: [Browser]

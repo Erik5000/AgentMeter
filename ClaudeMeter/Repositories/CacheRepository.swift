@@ -21,14 +21,20 @@ actor CacheRepository: CacheRepositoryProtocol {
             in: .userDomainMask
         ).first!
 
-        let cacheDir = appSupport.appendingPathComponent("com.claudemeter", isDirectory: true)
+        let cacheDir = appSupport.appendingPathComponent(
+            AppIdentity.appSupportDirectoryName,
+            isDirectory: true
+        )
         try? fileManager.createDirectory(at: cacheDir, withIntermediateDirectories: true)
 
         self.diskCacheURL = cacheDir.appendingPathComponent("usage_cache.json")
 
-        // Public JSON export at ~/.claudemeter/usage.json for external tools
+        // Public JSON export at ~/.agentmeter/usage.json for external tools
         let homeDir = fileManager.homeDirectoryForCurrentUser
-        let publicDir = homeDir.appendingPathComponent(".claudemeter", isDirectory: true)
+        let publicDir = homeDir.appendingPathComponent(
+            AppIdentity.publicExportDirectoryName,
+            isDirectory: true
+        )
         try? fileManager.createDirectory(at: publicDir, withIntermediateDirectories: true)
         self.publicJSONURL = publicDir.appendingPathComponent("usage.json")
     }

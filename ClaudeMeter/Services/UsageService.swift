@@ -10,7 +10,7 @@ import os
 
 /// Actor-isolated usage service with retry logic
 actor UsageService: UsageServiceProtocol {
-    private static let logger = Logger(subsystem: "com.claudemeter", category: "UsageService")
+    private static let logger = Logger(subsystem: AppIdentity.loggerSubsystem, category: "UsageService")
     private let networkService: NetworkServiceProtocol
     private let cacheRepository: CacheRepositoryProtocol
     private let keychainRepository: KeychainRepositoryProtocol
