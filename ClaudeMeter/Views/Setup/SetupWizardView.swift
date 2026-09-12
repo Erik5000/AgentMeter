@@ -25,7 +25,7 @@ struct SetupWizardView: View {
                         .foregroundColor(.blue)
                 }
 
-                Text("Welcome to ClaudeMeter")
+                Text("Welcome to \(AppIdentity.displayName)")
                     .font(.title)
                     .fontWeight(.bold)
 
@@ -98,7 +98,7 @@ struct SetupWizardView: View {
                 HStack(spacing: 8) {
                     Image(systemName: "checkmark.circle.fill")
                         .foregroundColor(.green)
-                    Text("Setup complete! Launching ClaudeMeter...")
+                    Text("Setup complete! Launching \(AppIdentity.displayName)...")
                         .font(.callout)
                         .foregroundColor(.green)
                 }

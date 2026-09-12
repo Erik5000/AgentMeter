@@ -61,7 +61,7 @@ final class MenuBarManager {
         button.action = #selector(togglePopover)
         button.sendAction(on: [.leftMouseUp, .rightMouseUp])
         button.imagePosition = .imageOnly
-        button.setAccessibilityLabel("ClaudeMeter")
+        button.setAccessibilityLabel(AppIdentity.displayName)
 
         updateIcon()
     }

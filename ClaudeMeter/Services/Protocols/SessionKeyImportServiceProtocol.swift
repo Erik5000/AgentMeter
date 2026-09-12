@@ -19,7 +19,7 @@ enum SessionKeyImportError: LocalizedError {
         case .noSessionKeyFound:
             return "No Claude browser session found. Sign in to claude.ai and try again."
         case .accessDenied:
-            return "ClaudeMeter could not access browser cookies. Allow the macOS prompt or paste your session."
+            return "\(AppIdentity.displayName) could not access browser cookies. Allow the macOS prompt or paste your session."
         case .safariAccessDenied:
             return "Safari needs Full Disk Access to import cookies. Use Chrome/Arc/Brave or paste your session."
         case .browserKeychainAccessDenied(let browserName):

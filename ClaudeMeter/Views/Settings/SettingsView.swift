@@ -287,7 +287,7 @@ struct SettingsView: View {
                     Text("Menu Bar Icon Style")
                         .font(.subheadline)
 
-                    Text("Choose how ClaudeMeter appears in the menu bar")
+                    Text("Choose how \(AppIdentity.displayName) appears in the menu bar")
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }
@@ -323,7 +323,7 @@ struct SettingsView: View {
             VStack(alignment: .leading, spacing: 4) {
                 Text("Start at Login")
                     .font(.subheadline)
-                Text("Automatically launch ClaudeMeter when you log in")
+                Text("Automatically launch \(AppIdentity.displayName) when you log in")
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
@@ -552,7 +552,7 @@ struct SettingsView: View {
 
             // App Name & Version
             VStack(spacing: 8) {
-                Text("ClaudeMeter")
+                Text(AppIdentity.displayName)
                     .font(.system(size: 28, weight: .semibold))
 
                 if let version = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String,
@@ -565,17 +565,17 @@ struct SettingsView: View {
 
             // Copyright
             VStack(spacing: 4) {
-                Text("© 2025 Edd Mann")
+                Text(AppIdentity.copyrightLine)
                     .font(.caption)
                     .foregroundStyle(.secondary)
 
-                Text("Monitor your Claude.ai usage limits")
+                Text(AppIdentity.tagline)
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
 
             // Project Link
-            Link(destination: URL(string: "https://github.com/eddmann/ClaudeMeter")!) {
+            Link(destination: AppIdentity.githubURL) {
                 HStack {
                     Image(systemName: "link.circle.fill")
                     Text("View Project on GitHub")

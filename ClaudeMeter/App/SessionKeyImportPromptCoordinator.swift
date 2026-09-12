@@ -1,7 +1,7 @@
 import AppKit
 import SweetCookieKit
 
-/// Presents ClaudeMeter-owned context before macOS shows browser Safe Storage prompts.
+/// Presents app-owned context before macOS shows browser Safe Storage prompts.
 enum SessionKeyImportPromptCoordinator {
     private static let promptLock = NSLock()
 
@@ -13,7 +13,7 @@ enum SessionKeyImportPromptCoordinator {
 
     private static func presentBrowserCookiePrompt(_ context: BrowserCookieKeychainPromptContext) {
         let message = [
-            "ClaudeMeter will ask macOS Keychain for \"\(context.label)\" so it can decrypt your Claude browser session cookie.",
+            "\(AppIdentity.displayName) will ask macOS Keychain for \"\(context.label)\" so it can decrypt your Claude browser session cookie.",
             "Click OK to continue, then allow the macOS Keychain prompt.",
         ].joined(separator: " ")
 
