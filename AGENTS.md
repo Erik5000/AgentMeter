@@ -1,4 +1,4 @@
-ClaudeMeter is a macOS 14+ SwiftUI menu bar app; keep UI state on `@MainActor @Observable` types and non-UI work in actor services/repositories.
+AgentMeter is a macOS 14+ SwiftUI menu bar app (fork of ClaudeMeter) that tracks Claude and Codex usage; keep UI state on `@MainActor @Observable` types and non-UI work in actor services/repositories.
 
 Build with `xcodebuild clean build -project ClaudeMeter.xcodeproj -scheme ClaudeMeter -configuration Debug`; test with `xcodebuild test -project ClaudeMeter.xcodeproj -scheme ClaudeMeter -configuration Debug`.
 

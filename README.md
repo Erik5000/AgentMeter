@@ -1,12 +1,10 @@
-# ClaudeMeter
+# AgentMeter
 
-![ClaudeMeter](docs/heading.png)
-
-Keep track of your Claude.ai plan usage at a glance.
+AgentMeter is a macOS menu bar app for **Claude and Codex** usage limits. Fork of [ClaudeMeter](https://github.com/eddmann/ClaudeMeter) by Edd Mann.
 
 ## Features
 
-- **Real-time usage monitoring** - Track your 5-hour session, 7-day weekly, and Sonnet-specific usage limits
+- **Real-time usage monitoring** - Track Claude and Codex usage limits
 - **Menu bar integration** - Clean, colour-coded usage indicator that lives in your macOS menu bar
 - **Multiple icon styles** - Choose from 6 icon styles: Battery, Circular, Minimal, Segments, Dual Bar, or Gauge
 - **Pacing indicator** - Flame icon warns when you're using Claude faster than sustainable pace
@@ -33,7 +31,7 @@ When using Sonnet models, an additional indicator shows your Sonnet-specific usa
 
 ### Notifications
 
-ClaudeMeter sends native macOS notifications when you reach warning or critical thresholds:
+AgentMeter sends native macOS notifications when you reach warning or critical thresholds:
 
 <p align="center">
   <img src="docs/notifications.png" width="450" alt="Usage notifications">
@@ -56,16 +54,10 @@ Configure your Claude session, refresh interval, icon style, and notification th
 
 ## Installation
 
-### Homebrew (Recommended)
-
-```bash
-brew install eddmann/tap/claudemeter
-```
-
 ### Manual Download
 
-1. Download the latest release from [GitHub Releases](https://github.com/eddmann/ClaudeMeter/releases)
-2. Unzip and move `ClaudeMeter.app` to Applications
+1. Download the latest release from [GitHub Releases](https://github.com/Erik5000/AgentMeter/releases)
+2. Unzip and move `AgentMeter.app` to Applications
 3. Double-click to open
 
 The app is signed and notarized by Apple, so it will open without any security warnings.
@@ -74,18 +66,18 @@ The app is signed and notarized by Apple, so it will open without any security w
 
 ### First Launch
 
-1. ClaudeMeter appears in your menu bar as a gauge icon
+1. AgentMeter appears in your menu bar as a gauge icon
 2. The setup wizard will guide you through initial configuration
 3. Import from a browser signed in to [claude.ai](https://claude.ai), or paste your session manually
 4. The app validates your session and begins monitoring usage
 
 ### Claude Session Setup
 
-ClaudeMeter can import your existing Claude session from local browser cookies. Sign in to [claude.ai](https://claude.ai) in a supported browser, then choose **Import from Browser** in the setup wizard or Settings.
+AgentMeter can import your existing Claude session from local browser cookies. Sign in to [claude.ai](https://claude.ai) in a supported browser, then choose **Import from Browser** in the setup wizard or Settings.
 
-Chrome, Arc, Brave, Edge, and other Chromium browsers may ask for browser Safe Storage Keychain access so ClaudeMeter can decrypt cookies. Safari cookies are protected by macOS and may require Full Disk Access.
+Chrome, Arc, Brave, Edge, and other Chromium browsers may ask for browser Safe Storage Keychain access so AgentMeter can decrypt cookies. Safari cookies are protected by macOS and may require Full Disk Access.
 
-If browser import is unavailable, paste your session manually. ClaudeMeter accepts either a raw `sk-ant-...` session key or a Cookie header containing `sessionKey=...`.
+If browser import is unavailable, paste your session manually. AgentMeter accepts either a raw `sk-ant-...` session key or a Cookie header containing `sessionKey=...`.
 
 #### Manual Session Setup
 
@@ -123,7 +115,7 @@ Your Claude session key is stored in your browser cookies.
 
 ### Integration with External Tools
 
-ClaudeMeter exports usage data to `~/.claudemeter/usage.json` for use with external tools like Claude Code statusline scripts, shell prompts, or custom dashboards.
+AgentMeter exports usage data to `~/.agentmeter/usage.json` for use with external tools like Claude Code statusline scripts, shell prompts, or custom dashboards.
 
 **JSON format:**
 
@@ -151,7 +143,7 @@ Create `~/.claude/statusline.sh`:
 
 ```bash
 #!/bin/bash
-usage=$(jq -r '.session_usage.utilization' ~/.claudemeter/usage.json 2>/dev/null)
+usage=$(jq -r '.session_usage.utilization' ~/.agentmeter/usage.json 2>/dev/null)
 
 if [ -z "$usage" ] || [ "$usage" = "null" ]; then
   echo "Usage: ~"
@@ -185,8 +177,8 @@ Then configure Claude Code's `~/.claude/settings.json`:
 
 ```bash
 # Clone the repository
-git clone https://github.com/eddmann/ClaudeMeter.git
-cd ClaudeMeter
+git clone https://github.com/Erik5000/AgentMeter.git
+cd AgentMeter
 
 # Open in Xcode
 open ClaudeMeter.xcodeproj
@@ -198,9 +190,9 @@ Requires Xcode 16.0 or later.
 
 ## Disclaimer
 
-**This is an unofficial tool** and is not affiliated with, endorsed by, or supported by Anthropic PBC.
+**This is an unofficial tool** and is not affiliated with, endorsed by, or supported by Anthropic or OpenAI.
 
-This application accesses Claude's web API using browser-based authentication methods. **This may violate Anthropic's Terms of Service.** By using ClaudeMeter, you acknowledge that:
+This application accesses Claude's web API using browser-based authentication methods. **This may violate Anthropic's Terms of Service.** By using AgentMeter, you acknowledge that:
 
 - Anthropic may block, restrict, or terminate access at any time
 - Your Claude account could be affected by using unofficial API clients
@@ -214,7 +206,7 @@ This application accesses Claude's web API using browser-based authentication me
 - Usage data is cached locally (unencrypted, contains usage percentages only)
 - No data is sent to third-party servers or collected by the developer
 
-This software is provided "as is" under the MIT License, without warranty of any kind. **By downloading and using ClaudeMeter, you accept these terms.**
+This software is provided "as is" under the MIT License, without warranty of any kind. **By downloading and using AgentMeter, you accept these terms.**
 
 ## License
 
