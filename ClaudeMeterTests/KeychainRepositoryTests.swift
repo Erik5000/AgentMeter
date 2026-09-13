@@ -17,6 +17,7 @@ final class KeychainRepositoryTests: XCTestCase {
             TestConstants.sessionKeyValue
         )
         XCTAssertNil(secItem.storedValue(account: account, service: modernService, dataProtection: false))
+        XCTAssertFalse(secItem.queriedServices.contains(legacyService))
     }
 
     func test_retrieve_doesNotHitKeychainAgainAfterFirstRead() async throws {
@@ -37,7 +38,7 @@ final class KeychainRepositoryTests: XCTestCase {
         XCTAssertEqual(secItem.copyMatchingCount, firstCount)
     }
 
-    func test_retrieve_migratesFileBasedItemIntoDataProtectionKeychain() async throws {
+    func test_retrieve_doesNotReadFileBasedOrLegacyItems() async {
         let secItem = InMemorySecItemClient()
         secItem.seed(
             account: account,
@@ -45,19 +46,26 @@ final class KeychainRepositoryTests: XCTestCase {
             dataProtection: false,
             value: TestConstants.sessionKeyValue
         )
+        secItem.seed(
+            account: account,
+            service: legacyService,
+            dataProtection: false,
+            value: TestConstants.sessionKeyValue
+        )
         let repository = repository(secItem: secItem)
 
-        let value = try await repository.retrieve(account: account)
-
-        XCTAssertEqual(value, TestConstants.sessionKeyValue)
-        XCTAssertEqual(
-            secItem.storedValue(account: account, service: modernService, dataProtection: true),
-            TestConstants.sessionKeyValue
-        )
-        XCTAssertNil(secItem.storedValue(account: account, service: modernService, dataProtection: false))
+        do {
+            _ = try await repository.retrieve(account: account)
+            XCTFail("Expected the file-based ClaudeMeter item to be ignored")
+        } catch KeychainError.notFound {
+            XCTAssertFalse(secItem.queriedServices.contains(legacyService))
+            XCTAssertEqual(secItem.queriedServices, [modernService])
+        } catch {
+            XCTFail("Unexpected error: \(error)")
+        }
     }
 
-    func test_retrieve_copiesLegacyClaudeMeterItemWithoutDeletingIt() async throws {
+    func test_exists_isFalseForLegacyClaudeMeterItem() async {
         let secItem = InMemorySecItemClient()
         secItem.seed(
             account: account,
@@ -67,17 +75,10 @@ final class KeychainRepositoryTests: XCTestCase {
         )
         let repository = repository(secItem: secItem)
 
-        let value = try await repository.retrieve(account: account)
+        let exists = await repository.exists(account: account)
 
-        XCTAssertEqual(value, TestConstants.sessionKeyValue)
-        XCTAssertEqual(
-            secItem.storedValue(account: account, service: modernService, dataProtection: true),
-            TestConstants.sessionKeyValue
-        )
-        XCTAssertEqual(
-            secItem.storedValue(account: account, service: legacyService, dataProtection: false),
-            TestConstants.sessionKeyValue
-        )
+        XCTAssertFalse(exists)
+        XCTAssertFalse(secItem.queriedServices.contains(legacyService))
     }
 
     func test_delete_doesNotRemoveLegacyClaudeMeterItem() async throws {
@@ -100,26 +101,7 @@ final class KeychainRepositoryTests: XCTestCase {
         )
     }
 
-    func test_exists_isTrueForLegacyClaudeMeterItem() async {
-        let secItem = InMemorySecItemClient()
-        secItem.seed(
-            account: account,
-            service: legacyService,
-            dataProtection: false,
-            value: TestConstants.sessionKeyValue
-        )
-        let repository = repository(secItem: secItem)
-
-        let exists = await repository.exists(account: account)
-
-        XCTAssertTrue(exists)
-    }
-
     private func repository(secItem: InMemorySecItemClient) -> KeychainRepository {
-        KeychainRepository(
-            secItem: secItem,
-            serviceName: modernService,
-            legacyServices: [legacyService]
-        )
+        KeychainRepository(secItem: secItem, serviceName: modernService)
     }
 }

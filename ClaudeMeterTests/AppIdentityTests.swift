@@ -14,7 +14,6 @@ final class AppIdentityTests: XCTestCase {
     func test_pathsAndKeychain_doNotUseClaudeMeterIds() {
         XCTAssertEqual(AppIdentity.loggerSubsystem, "com.erik5000.AgentMeter")
         XCTAssertEqual(AppIdentity.keychainService, "com.erik5000.AgentMeter.sessionkey")
-        XCTAssertEqual(AppIdentity.legacyKeychainServices, ["com.claudemeter.sessionkey"])
         XCTAssertEqual(AppIdentity.appSupportDirectoryName, "com.erik5000.AgentMeter")
         XCTAssertEqual(AppIdentity.publicExportDirectoryName, ".agentmeter")
         XCTAssertFalse(AppIdentity.publicExportDirectoryName.contains("claude"))

@@ -10,28 +10,25 @@ import Security
 
 /// Actor-isolated repository for secure Keychain operations.
 ///
-/// Session keys are stored in the data-protection keychain so macOS does not
-/// show the file-based login-keychain ACL prompt on every read.
+/// Session keys live only in the data-protection keychain. The file-based
+/// login keychain is never queried, so macOS cannot show the ACL password
+/// dialog for `com.claudemeter.sessionkey`.
 actor KeychainRepository: KeychainRepositoryProtocol {
     private let secItem: any SecItemClient
     private let serviceName: String
-    private let legacyServices: [String]
     private var cachedSessionKeys: [String: String] = [:]
 
     init(
         secItem: any SecItemClient = SystemSecItemClient(),
-        serviceName: String = AppIdentity.keychainService,
-        legacyServices: [String] = AppIdentity.legacyKeychainServices
+        serviceName: String = AppIdentity.keychainService
     ) {
         self.secItem = secItem
         self.serviceName = serviceName
-        self.legacyServices = legacyServices
     }
 
     func save(sessionKey: String, account: String) async throws {
-        try persistModern(sessionKey: sessionKey, account: account)
+        try persist(sessionKey: sessionKey, account: account)
         cachedSessionKeys[account] = sessionKey
-        deleteSilently(account: account, service: serviceName, dataProtection: false)
     }
 
     func retrieve(account: String) async throws -> String {
@@ -39,51 +36,24 @@ actor KeychainRepository: KeychainRepositoryProtocol {
             return cached
         }
 
-        if let value = copyString(account: account, service: serviceName, dataProtection: true) {
+        if let value = copyString(account: account) {
             cachedSessionKeys[account] = value
             return value
-        }
-
-        if let value = copyString(account: account, service: serviceName, dataProtection: false) {
-            try? persistModern(sessionKey: value, account: account)
-            deleteSilently(account: account, service: serviceName, dataProtection: false)
-            cachedSessionKeys[account] = value
-            return value
-        }
-
-        for service in legacyServices {
-            let value = copyString(account: account, service: service, dataProtection: false)
-                ?? copyString(account: account, service: service, dataProtection: true)
-            if let value {
-                try? persistModern(sessionKey: value, account: account)
-                cachedSessionKeys[account] = value
-                return value
-            }
         }
 
         throw KeychainError.notFound
     }
 
     func update(sessionKey: String, account: String) async throws {
-        try persistModern(sessionKey: sessionKey, account: account)
+        try persist(sessionKey: sessionKey, account: account)
         cachedSessionKeys[account] = sessionKey
-        deleteSilently(account: account, service: serviceName, dataProtection: false)
     }
 
     func delete(account: String) async throws {
         cachedSessionKeys[account] = nil
-        let dataProtectionStatus = secItem.delete(
-            KeychainItemQuery.password(account: account, service: serviceName, dataProtection: true)
-        )
-        let fileBasedStatus = secItem.delete(
-            KeychainItemQuery.password(account: account, service: serviceName, dataProtection: false)
-        )
-
-        let statuses = [dataProtectionStatus, fileBasedStatus]
-        guard statuses.allSatisfy({ $0 == errSecSuccess || $0 == errSecItemNotFound }) else {
-            throw KeychainError.deleteFailed(
-                OSStatus: statuses.first { $0 != errSecSuccess && $0 != errSecItemNotFound } ?? errSecUnimplemented
-            )
+        let status = secItem.delete(KeychainItemQuery.password(account: account, service: serviceName))
+        guard status == errSecSuccess || status == errSecItemNotFound else {
+            throw KeychainError.deleteFailed(OSStatus: status)
         }
     }
 
@@ -91,7 +61,7 @@ actor KeychainRepository: KeychainRepositoryProtocol {
         (try? await retrieve(account: account)) != nil
     }
 
-    private func persistModern(sessionKey: String, account: String) throws {
+    private func persist(sessionKey: String, account: String) throws {
         guard let data = sessionKey.data(using: .utf8) else {
             throw KeychainError.saveFailed(OSStatus: errSecParam)
         }
@@ -99,11 +69,7 @@ actor KeychainRepository: KeychainRepositoryProtocol {
         let addStatus = secItem.add(KeychainItemQuery.add(account: account, service: serviceName, data: data))
         if addStatus == errSecDuplicateItem {
             let updateStatus = secItem.update(
-                query: KeychainItemQuery.password(
-                    account: account,
-                    service: serviceName,
-                    dataProtection: true
-                ),
+                query: KeychainItemQuery.password(account: account, service: serviceName),
                 attributes: [kSecValueData as String: data]
             )
             guard updateStatus == errSecSuccess else {
@@ -114,23 +80,12 @@ actor KeychainRepository: KeychainRepositoryProtocol {
         }
     }
 
-    private func copyString(account: String, service: String, dataProtection: Bool) -> String? {
-        let query = KeychainItemQuery.lookup(
-            account: account,
-            service: service,
-            returnData: true,
-            dataProtection: dataProtection
-        )
+    private func copyString(account: String) -> String? {
+        let query = KeychainItemQuery.lookup(account: account, service: serviceName, returnData: true)
         let (status, data) = secItem.copyMatching(query)
         guard status == errSecSuccess, let data, let value = String(data: data, encoding: .utf8) else {
             return nil
         }
         return value
-    }
-
-    private func deleteSilently(account: String, service: String, dataProtection: Bool) {
-        _ = secItem.delete(
-            KeychainItemQuery.password(account: account, service: service, dataProtection: dataProtection)
-        )
     }
 }

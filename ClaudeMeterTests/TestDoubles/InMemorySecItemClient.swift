@@ -12,6 +12,7 @@ final class InMemorySecItemClient: SecItemClient, @unchecked Sendable {
     private let lock = NSLock()
     private var items: [ItemKey: Data] = [:]
     private(set) var copyMatchingCount = 0
+    private(set) var queriedServices: [String] = []
     private(set) var addCount = 0
     private(set) var updateCount = 0
     private(set) var deleteCount = 0
@@ -49,6 +50,7 @@ final class InMemorySecItemClient: SecItemClient, @unchecked Sendable {
         lock.lock()
         defer { lock.unlock() }
         copyMatchingCount += 1
+        queriedServices.append(query[kSecAttrService as String] as? String ?? "")
         let key = itemKey(from: query)
         guard let data = items[key] else { return (errSecItemNotFound, nil) }
         if boolValue(query[kSecReturnData as String]) {
