@@ -287,9 +287,13 @@ struct SettingsView: View {
                     Text("Menu Bar Icon Style")
                         .font(.subheadline)
 
-                    Text("Choose how \(AppIdentity.displayName) appears in the menu bar")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
+                    Text(
+                        appModel.settings.isCodexUsageShown
+                            ? IconStyle.dualBarRequiredForCodexCaption
+                            : "Choose how \(AppIdentity.displayName) appears in the menu bar"
+                    )
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
                 }
 
                 Spacer()
@@ -309,6 +313,14 @@ struct SettingsView: View {
                 selection: $appModel.settings.iconStyle,
                 isColored: appModel.settings.isColoredIcon,
                 showsCodex: appModel.settings.isCodexUsageShown
+            )
+            .disabled(!IconStyle.isPickerEnabled(isCodexUsageShown: appModel.settings.isCodexUsageShown))
+            .allowsHitTesting(IconStyle.isPickerEnabled(isCodexUsageShown: appModel.settings.isCodexUsageShown))
+            .opacity(IconStyle.isPickerEnabled(isCodexUsageShown: appModel.settings.isCodexUsageShown) ? 1 : 0.5)
+            .accessibilityHint(
+                IconStyle.isPickerEnabled(isCodexUsageShown: appModel.settings.isCodexUsageShown)
+                    ? ""
+                    : IconStyle.dualBarRequiredForCodexCaption
             )
         }
         .padding()

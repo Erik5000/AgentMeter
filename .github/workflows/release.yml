@@ -16,18 +16,33 @@ jobs:
       - name: Extract version from changelog
         id: version
         run: |
-          VERSION=$(sed -n 's/^## \[\([^]]*\)\].*/\1/p' CHANGELOG.md | head -1)
+          VERSION=$(awk '
+            /^## \[/ && $0 !~ /\[Unreleased\]/ {
+              sub(/^## \[/, "")
+              sub(/\].*/, "")
+              print
+              exit
+            }
+          ' CHANGELOG.md)
           echo "version=$VERSION" >> $GITHUB_OUTPUT
 
       - name: Extract changelog
         id: changelog
         run: |
-          VERSION=$(sed -n 's/^## \[\([^]]*\)\].*/\1/p' CHANGELOG.md | head -1)
+          VERSION=$(awk '
+            /^## \[/ && $0 !~ /\[Unreleased\]/ {
+              sub(/^## \[/, "")
+              sub(/\].*/, "")
+              print
+              exit
+            }
+          ' CHANGELOG.md)
           echo "version=$VERSION" >> $GITHUB_OUTPUT
 
           CONTENT=$(awk '
             /^## \[/ {
               if (found) exit
+              if ($0 ~ /\[Unreleased\]/) next
               found=1
               next
             }

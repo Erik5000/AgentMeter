@@ -41,4 +41,12 @@ enum IconStyle: String, Codable, CaseIterable, Identifiable, Sendable {
         case .gauge: return "Gauge indicator"
         }
     }
+
+    /// Icon style is forced to Dual Bar while Codex usage is shown, so the picker is inert.
+    static func isPickerEnabled(isCodexUsageShown: Bool) -> Bool {
+        !isCodexUsageShown
+    }
+
+    static let dualBarRequiredForCodexCaption =
+        "Dual Bar is used while Codex usage is on so Claude and Codex can be shown together."
 }

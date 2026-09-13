@@ -78,7 +78,11 @@ struct UsagePopoverView: View {
                 Divider()
             }
 
-            if let usageData = appModel.usageData {
+            if UsagePopoverContent.hasUsageContent(
+                claude: appModel.usageData,
+                codex: appModel.codexUsageData,
+                isCodexUsageShown: appModel.settings.isCodexUsageShown
+            ) {
                 ScrollView {
                     VStack(spacing: appModel.settings.isCodexUsageShown ? 12 : 16) {
                         if appModel.settings.isCodexUsageShown,
@@ -93,17 +97,17 @@ struct UsagePopoverView: View {
                             UsageComparisonCardView(
                                 title: "5-Hour Session",
                                 icon: "clock.arrow.circlepath",
-                                metrics: sessionMetrics(for: usageData),
+                                metrics: sessionMetrics(),
                                 showsExactResetTime: appModel.settings.isResetTimeShown
                             )
 
                             UsageComparisonCardView(
                                 title: "Weekly Usage",
                                 icon: "calendar",
-                                metrics: weeklyMetrics(for: usageData),
+                                metrics: weeklyMetrics(),
                                 showsExactResetTime: appModel.settings.isResetTimeShown
                             )
-                        } else {
+                        } else if let usageData = appModel.usageData {
                             UsageCardView(
                                 title: "5-Hour Session",
                                 usageLimit: usageData.sessionUsage,
@@ -122,7 +126,7 @@ struct UsagePopoverView: View {
                             )
                         }
 
-                        if appModel.settings.isSonnetUsageShown, let sonnetUsage = usageData.sonnetUsage {
+                        if appModel.settings.isSonnetUsageShown, let sonnetUsage = appModel.usageData?.sonnetUsage {
                             UsageCardView(
                                 title: "Weekly Sonnet",
                                 usageLimit: sonnetUsage,
@@ -134,7 +138,7 @@ struct UsagePopoverView: View {
                     }
                     .padding()
                 }
-            } else {
+            } else if appModel.isLoading || appModel.isRefreshing {
                 VStack(spacing: 16) {
                     ProgressView()
                     Text("Loading usage data...")
@@ -143,6 +147,8 @@ struct UsagePopoverView: View {
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
                 .padding()
+            } else {
+                Spacer(minLength: 0)
             }
 
             Divider()
@@ -172,6 +178,16 @@ struct UsagePopoverView: View {
         .accessibilityLabel("Usage Dashboard")
     }
 
+    private var claudePlaceholder: String {
+        if appModel.errorMessage != nil {
+            return "Unavailable"
+        }
+        if appModel.usageData == nil {
+            return "Loading…"
+        }
+        return "Unavailable"
+    }
+
     private var codexPlaceholder: String {
         if appModel.codexErrorMessage != nil {
             return "Unavailable"
@@ -182,17 +198,17 @@ struct UsagePopoverView: View {
         return "Unavailable"
     }
 
-    private func sessionMetrics(for usageData: UsageData) -> [UsageProviderMetric] {
+    private func sessionMetrics() -> [UsageProviderMetric] {
         var metrics = [
             UsageProviderMetric(
                 id: "claude-session",
                 name: "Claude",
                 detail: nil,
                 icon: "sparkles",
-                usageLimit: usageData.sessionUsage,
+                usageLimit: appModel.usageData?.sessionUsage,
                 windowDuration: Constants.Pacing.sessionWindow,
                 usesTimeOnlyResetTimestamp: true,
-                placeholder: "Unavailable"
+                placeholder: claudePlaceholder
             )
         ]
 
@@ -214,17 +230,17 @@ struct UsagePopoverView: View {
         return metrics
     }
 
-    private func weeklyMetrics(for usageData: UsageData) -> [UsageProviderMetric] {
+    private func weeklyMetrics() -> [UsageProviderMetric] {
         var metrics = [
             UsageProviderMetric(
                 id: "claude-weekly",
                 name: "Claude",
                 detail: nil,
                 icon: "sparkles",
-                usageLimit: usageData.weeklyUsage,
+                usageLimit: appModel.usageData?.weeklyUsage,
                 windowDuration: Constants.Pacing.weeklyWindow,
                 usesTimeOnlyResetTimestamp: false,
-                placeholder: "Unavailable"
+                placeholder: claudePlaceholder
             )
         ]
 

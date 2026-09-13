@@ -129,6 +129,68 @@ final class AppModelTests: XCTestCase {
         XCTAssertNil(appModel.codexErrorMessage)
     }
 
+    func test_refreshingUsage_whenClaudeFailsAndCodexSucceeds_isDisplayable() async {
+        let claudeFailure = TestError(message: TestConstants.fetchFailureMessage)
+        let expectedCodexUsage = makeCodexUsageData()
+        let usageService = UsageServiceStub(fetchUsageResult: .failure(claudeFailure))
+        let codexUsageService = CodexUsageServiceStub(result: .success(expectedCodexUsage))
+        let appModel = AppModel(
+            settingsRepository: SettingsRepositoryFake(),
+            keychainRepository: KeychainRepositoryFake(),
+            usageService: usageService,
+            codexUsageService: codexUsageService,
+            notificationService: NotificationServiceSpy()
+        )
+        appModel.isSetupComplete = true
+
+        await appModel.refreshUsage(forceRefresh: true)
+
+        XCTAssertNil(appModel.usageData)
+        XCTAssertEqual(appModel.errorMessage, claudeFailure.localizedDescription)
+        XCTAssertEqual(appModel.codexUsageData, expectedCodexUsage)
+        XCTAssertNil(appModel.codexErrorMessage)
+        XCTAssertTrue(
+            UsagePopoverContent.hasUsageContent(
+                claude: appModel.usageData,
+                codex: appModel.codexUsageData,
+                isCodexUsageShown: appModel.settings.isCodexUsageShown
+            )
+        )
+    }
+
+    func test_refreshingUsage_cancelsInFlightProviderFetchesWhenCallerCancels() async {
+        let usageService = UsageServiceStub(
+            fetchUsageResult: .success(makeUsageData(percentage: TestConstants.sessionPercentage)),
+            fetchDelay: .seconds(5)
+        )
+        let codexUsageService = CodexUsageServiceStub(
+            result: .success(makeCodexUsageData()),
+            fetchDelay: .seconds(5)
+        )
+        let appModel = AppModel(
+            settingsRepository: SettingsRepositoryFake(),
+            keychainRepository: KeychainRepositoryFake(),
+            usageService: usageService,
+            codexUsageService: codexUsageService,
+            notificationService: NotificationServiceSpy()
+        )
+        appModel.isSetupComplete = true
+
+        let refresh = Task {
+            await appModel.refreshUsage(forceRefresh: true)
+        }
+        await usageService.waitUntilFetchStarted()
+        await codexUsageService.waitUntilFetchStarted()
+        refresh.cancel()
+        await refresh.value
+
+        let claudeCancelled = await usageService.didCancelFetch()
+        let codexCancelled = await codexUsageService.didCancelFetch()
+        XCTAssertTrue(claudeCancelled)
+        XCTAssertTrue(codexCancelled)
+        XCTAssertFalse(appModel.isRefreshing)
+    }
+
     func test_refreshingUsage_keepsClaudeUsageWhenCodexFails() async {
         let expectedUsage = makeUsageData(percentage: TestConstants.sessionPercentage)
         let codexFailure = TestError(message: "Codex unavailable")

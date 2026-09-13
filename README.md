@@ -60,7 +60,7 @@ Configure your Claude session, refresh interval, icon style, and notification th
 2. Unzip and move `AgentMeter.app` to Applications
 3. Double-click to open
 
-The app is signed and notarized by Apple, so it will open without any security warnings.
+Current GitHub Releases are unsigned. On first launch, macOS Gatekeeper may block the app; right-click `AgentMeter.app` and choose Open, or allow it in System Settings → Privacy & Security.
 
 ## Usage
 
@@ -196,7 +196,7 @@ This application accesses Claude's web API using browser-based authentication me
 
 - Anthropic may block, restrict, or terminate access at any time
 - Your Claude account could be affected by using unofficial API clients
-- This app is signed and notarized by Apple
+- GitHub builds are unsigned; macOS may require a Gatekeeper bypass on first launch
 - **Use at your own risk** - the developer assumes no liability for any consequences
 
 **Data storage:**

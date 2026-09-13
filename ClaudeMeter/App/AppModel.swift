@@ -99,7 +99,11 @@ final class AppModel {
         }
         guard !isRefreshing else { return }
 
-        if usageData == nil {
+        if !UsagePopoverContent.hasUsageContent(
+            claude: usageData,
+            codex: codexUsageData,
+            isCodexUsageShown: settings.isCodexUsageShown
+        ) {
             isLoading = true
         }
         isRefreshing = true
@@ -110,37 +114,39 @@ final class AppModel {
             isRefreshing = false
         }
 
-        let claudeTask = Task {
-            try await usageService.fetchUsage(forceRefresh: forceRefresh)
-        }
         let shouldFetchCodex = settings.isCodexUsageShown
-        let codexTask: Task<CodexUsageData, Error>? = {
-            guard shouldFetchCodex, let codexUsageService else { return nil }
-            return Task {
-                try await codexUsageService.fetchUsage()
-            }
-        }()
+        let codexService = shouldFetchCodex ? codexUsageService : nil
 
-        do {
-            let data = try await claudeTask.value
+        async let claudeOutcome = fetchClaudeUsage(forceRefresh: forceRefresh)
+        async let codexOutcome = fetchCodexUsage(using: codexService)
+
+        switch await claudeOutcome {
+        case .success(let data):
             usageData = data
             errorMessage = nil
             await notificationService.evaluateThresholds(
                 usageData: data,
                 settings: settings
             )
-        } catch {
+        case .failure(let error):
             errorMessage = error.localizedDescription
         }
 
-        if shouldFetchCodex, let codexTask {
-            do {
-                codexUsageData = try await codexTask.value
+        if shouldFetchCodex {
+            if let outcome = await codexOutcome {
+                switch outcome {
+                case .success(let data):
+                    codexUsageData = data
+                    codexErrorMessage = nil
+                case .failure(let error):
+                    codexErrorMessage = error.localizedDescription
+                }
+            } else {
+                codexUsageData = nil
                 codexErrorMessage = nil
-            } catch {
-                codexErrorMessage = error.localizedDescription
             }
         } else {
+            _ = await codexOutcome
             codexUsageData = nil
             codexErrorMessage = nil
         }
@@ -242,6 +248,23 @@ final class AppModel {
 
         if previous.isCodexUsageShown != settings.isCodexUsageShown, isSetupComplete {
             Task { await refreshUsage(forceRefresh: true) }
+        }
+    }
+
+    private func fetchClaudeUsage(forceRefresh: Bool) async -> Result<UsageData, Error> {
+        do {
+            return .success(try await usageService.fetchUsage(forceRefresh: forceRefresh))
+        } catch {
+            return .failure(error)
+        }
+    }
+
+    private func fetchCodexUsage(using service: CodexUsageServiceProtocol?) async -> Result<CodexUsageData, Error>? {
+        guard let service else { return nil }
+        do {
+            return .success(try await service.fetchUsage())
+        } catch {
+            return .failure(error)
         }
     }
 
