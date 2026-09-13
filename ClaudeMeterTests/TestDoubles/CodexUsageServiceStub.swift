@@ -5,6 +5,7 @@ actor CodexUsageServiceStub: CodexUsageServiceProtocol {
     let result: Result<CodexUsageData, Error>
     let fetchDelay: Duration?
     private(set) var fetchWasCancelled = false
+    private(set) var fetchCallCount = 0
     private var fetchStarted = false
     private var fetchStartedWaiters: [CheckedContinuation<Void, Never>] = []
 
@@ -25,6 +26,7 @@ actor CodexUsageServiceStub: CodexUsageServiceProtocol {
     }
 
     func fetchUsage() async throws -> CodexUsageData {
+        fetchCallCount += 1
         fetchStarted = true
         let waiters = fetchStartedWaiters
         fetchStartedWaiters = []

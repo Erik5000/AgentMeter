@@ -22,13 +22,16 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
-		6814B1072EC74F6000B4B5C3 /* ClaudeMeter.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ClaudeMeter.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		6814B1072EC74F6000B4B5C3 /* AgentMeter.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = AgentMeter.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		E19FC5088677C21D48B7E68B /* ClaudeMeterTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = ClaudeMeterTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		6814B1092EC74F6000B4B5C3 /* ClaudeMeter */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				A11INFOEXCEPT000000000001 /* Exceptions for "ClaudeMeter" folder in "ClaudeMeter" target */,
+			);
 			path = ClaudeMeter;
 			sourceTree = "<group>";
 		};
@@ -38,6 +41,16 @@
 			sourceTree = "<group>";
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */
+
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		A11INFOEXCEPT000000000001 /* Exceptions for "ClaudeMeter" folder in "ClaudeMeter" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Resources/Info.plist,
+			);
+			target = 6814B1062EC74F6000B4B5C3 /* ClaudeMeter */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFrameworksBuildPhase section */
 		269009429DB6ABE8EA9B9366 /* Frameworks */ = {
@@ -71,7 +84,7 @@
 		6814B1082EC74F6000B4B5C3 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				6814B1072EC74F6000B4B5C3 /* ClaudeMeter.app */,
+				6814B1072EC74F6000B4B5C3 /* AgentMeter.app */,
 				E19FC5088677C21D48B7E68B /* ClaudeMeterTests.xctest */,
 			);
 			name = Products;
@@ -124,7 +137,7 @@
 				B4C1B3B02ECA700100000001 /* SweetCookieKit */,
 			);
 			productName = ClaudeMeter;
-			productReference = 6814B1072EC74F6000B4B5C3 /* ClaudeMeter.app */;
+			productReference = 6814B1072EC74F6000B4B5C3 /* AgentMeter.app */;
 			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */
@@ -399,10 +412,12 @@
 				ENABLE_RESOURCE_ACCESS_USB = NO;
 				ENABLE_USER_SELECTED_FILES = readonly;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = ClaudeMeter/Resources/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = AgentMeter;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
 				INFOPLIST_KEY_LSUIElement = YES;
-				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				INFOPLIST_KEY_NSHumanReadableCopyright = "© 2025 Edd Mann · © 2026 Erik Biebinger";
+				INFOPLIST_KEY_NSUserNotificationsUsageDescription = "AgentMeter sends notifications when Claude session usage approaches warning or critical thresholds and when a usage window resets.";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/../Frameworks",
@@ -446,10 +461,12 @@
 				ENABLE_RESOURCE_ACCESS_USB = NO;
 				ENABLE_USER_SELECTED_FILES = readonly;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = ClaudeMeter/Resources/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = AgentMeter;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
 				INFOPLIST_KEY_LSUIElement = YES;
-				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				INFOPLIST_KEY_NSHumanReadableCopyright = "© 2025 Edd Mann · © 2026 Erik Biebinger";
+				INFOPLIST_KEY_NSUserNotificationsUsageDescription = "AgentMeter sends notifications when Claude session usage approaches warning or critical thresholds and when a usage window resets.";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/../Frameworks",

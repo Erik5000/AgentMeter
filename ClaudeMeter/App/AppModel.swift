@@ -10,8 +10,16 @@ final class AppModel {
 
     var settings: AppSettings = .default {
         didSet {
-            guard hasLoadedSettings else { return }
-            scheduleSettingsSave(previous: oldValue)
+            guard hasLoadedSettings, !isNormalizingSettings else { return }
+            let previous = oldValue
+            if settings.isCodexUsageShown, settings.iconStyle != .dualBar {
+                isNormalizingSettings = true
+                var normalized = settings
+                normalized.iconStyle = .dualBar
+                settings = normalized
+                isNormalizingSettings = false
+            }
+            scheduleSettingsSave(previous: previous)
         }
     }
 
@@ -36,9 +44,12 @@ final class AppModel {
     // MARK: - Private
 
     @ObservationIgnored private var refreshTask: Task<Void, Never>?
+    @ObservationIgnored private var inFlightRefresh: Task<Void, Never>?
     @ObservationIgnored private var settingsSaveTask: Task<Void, Never>?
     @ObservationIgnored private var wakeTask: Task<Void, Never>?
     @ObservationIgnored private var hasLoadedSettings: Bool = false
+    @ObservationIgnored private var isNormalizingSettings: Bool = false
+    @ObservationIgnored private var refreshGeneration: UInt64 = 0
     @ObservationIgnored private let refreshClock = ContinuousClock()
 
     // MARK: - Initialization
@@ -78,6 +89,9 @@ final class AppModel {
         guard !isReady else { return }
         settings = await settingsRepository.load()
         hasLoadedSettings = true
+        if settings.isCodexUsageShown, settings.iconStyle != .dualBar {
+            settings.iconStyle = .dualBar
+        }
 
         isSetupComplete = await keychainRepository.exists(account: "default")
         isReady = true
@@ -93,11 +107,24 @@ final class AppModel {
     // MARK: - Usage
 
     func refreshUsage(forceRefresh: Bool = false) async {
+        inFlightRefresh?.cancel()
+        let task = Task { await self.performRefresh(forceRefresh: forceRefresh) }
+        inFlightRefresh = task
+        await withTaskCancellationHandler {
+            await task.value
+        } onCancel: {
+            task.cancel()
+        }
+    }
+
+    private func performRefresh(forceRefresh: Bool) async {
         guard isSetupComplete else {
-            usageData = nil
+            clearUsageState()
             return
         }
-        guard !isRefreshing else { return }
+
+        refreshGeneration += 1
+        let generation = refreshGeneration
 
         if !UsagePopoverContent.hasUsageContent(
             claude: usageData,
@@ -108,10 +135,13 @@ final class AppModel {
         }
         isRefreshing = true
         errorMessage = nil
+        codexErrorMessage = nil
 
         defer {
-            isLoading = false
-            isRefreshing = false
+            if generation == refreshGeneration {
+                isLoading = false
+                isRefreshing = false
+            }
         }
 
         let shouldFetchCodex = settings.isCodexUsageShown
@@ -120,7 +150,17 @@ final class AppModel {
         async let claudeOutcome = fetchClaudeUsage(forceRefresh: forceRefresh)
         async let codexOutcome = fetchCodexUsage(using: codexService)
 
-        switch await claudeOutcome {
+        let claude = await claudeOutcome
+        let codex = await codexOutcome
+
+        guard generation == refreshGeneration, !Task.isCancelled, isSetupComplete else {
+            return
+        }
+        if claude.isCancelled || (shouldFetchCodex && (codex?.isCancelled ?? false)) {
+            return
+        }
+
+        switch claude {
         case .success(let data):
             usageData = data
             errorMessage = nil
@@ -130,23 +170,30 @@ final class AppModel {
             )
         case .failure(let error):
             errorMessage = error.localizedDescription
+        case .cancelled:
+            return
+        }
+
+        guard generation == refreshGeneration, !Task.isCancelled, isSetupComplete else {
+            return
         }
 
         if shouldFetchCodex {
-            if let outcome = await codexOutcome {
+            if let outcome = codex {
                 switch outcome {
                 case .success(let data):
                     codexUsageData = data
                     codexErrorMessage = nil
                 case .failure(let error):
                     codexErrorMessage = error.localizedDescription
+                case .cancelled:
+                    return
                 }
             } else {
                 codexUsageData = nil
                 codexErrorMessage = nil
             }
         } else {
-            _ = await codexOutcome
             codexUsageData = nil
             codexErrorMessage = nil
         }
@@ -202,15 +249,14 @@ final class AppModel {
     }
 
     func clearSessionKey() async throws {
+        refreshGeneration += 1
+        inFlightRefresh?.cancel()
+        refreshTask?.cancel()
         try await keychainRepository.delete(account: "default")
         settings.cachedOrganizationId = nil
         settings.isFirstLaunch = true
         isSetupComplete = false
-        usageData = nil
-        errorMessage = nil
-        codexUsageData = nil
-        codexErrorMessage = nil
-        refreshTask?.cancel()
+        clearUsageState()
     }
 
     // MARK: - Notifications
@@ -251,21 +297,39 @@ final class AppModel {
         }
     }
 
-    private func fetchClaudeUsage(forceRefresh: Bool) async -> Result<UsageData, Error> {
+    private func clearUsageState() {
+        usageData = nil
+        errorMessage = nil
+        codexUsageData = nil
+        codexErrorMessage = nil
+    }
+
+    private func fetchClaudeUsage(forceRefresh: Bool) async -> ProviderFetch<UsageData> {
         do {
             return .success(try await usageService.fetchUsage(forceRefresh: forceRefresh))
         } catch {
-            return .failure(error)
+            return Self.providerFetch(from: error)
         }
     }
 
-    private func fetchCodexUsage(using service: CodexUsageServiceProtocol?) async -> Result<CodexUsageData, Error>? {
+    private func fetchCodexUsage(using service: CodexUsageServiceProtocol?) async -> ProviderFetch<CodexUsageData>? {
         guard let service else { return nil }
         do {
             return .success(try await service.fetchUsage())
         } catch {
-            return .failure(error)
+            return Self.providerFetch(from: error)
         }
+    }
+
+    private static func providerFetch<Value>(from error: Error) -> ProviderFetch<Value> {
+        if error is CancellationError {
+            return .cancelled
+        }
+        let urlError = error as NSError
+        if urlError.domain == NSURLErrorDomain, urlError.code == NSURLErrorCancelled {
+            return .cancelled
+        }
+        return .failure(error)
     }
 
     private func startRefreshLoop() {
@@ -315,4 +379,15 @@ final class AppModel {
     }
     #endif
 
+}
+
+private enum ProviderFetch<Value> {
+    case success(Value)
+    case failure(Error)
+    case cancelled
+
+    var isCancelled: Bool {
+        if case .cancelled = self { return true }
+        return false
+    }
 }

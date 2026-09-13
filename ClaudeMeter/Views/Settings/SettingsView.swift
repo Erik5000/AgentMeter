@@ -374,7 +374,7 @@ struct SettingsView: View {
                 VStack(alignment: .leading, spacing: 4) {
                     Text("Enable Notifications")
                         .font(.subheadline)
-                    Text("Get notified when session usage thresholds are reached")
+                    Text("Get notified when Claude session usage thresholds are reached")
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }
@@ -578,6 +578,10 @@ struct SettingsView: View {
             // Copyright
             VStack(spacing: 4) {
                 Text(AppIdentity.copyrightLine)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+
+                Text(AppIdentity.forkAttribution)
                     .font(.caption)
                     .foregroundStyle(.secondary)
 

@@ -16,33 +16,13 @@ struct MenuBarIconView: View {
     let iconStyle: IconStyle
     var weeklyPercentage: Double = 0  // Optional, used by dualBar style
     var showsCodex: Bool = false
-    var claudeSession: Double = 0
-    var claudeWeekly: Double = 0
-    var codexSession: Double = 0
-    var codexWeekly: Double = 0
+    var claudeSession: Double? = nil
+    var claudeWeekly: Double? = nil
+    var codexSession: Double? = nil
+    var codexWeekly: Double? = nil
 
     var body: some View {
-        if showsCodex, !isLoading {
-            DualBarIcon(
-                percentage: percentage,
-                weeklyPercentage: weeklyPercentage,
-                status: status,
-                isLoading: isLoading,
-                isStale: isStale,
-                showsCodex: true,
-                claudeSession: claudeSession,
-                claudeWeekly: claudeWeekly,
-                codexSession: codexSession,
-                codexWeekly: codexWeekly
-            )
-        } else {
-            singleProvider(percentage: percentage, status: status)
-        }
-    }
-
-    @ViewBuilder
-    private func singleProvider(percentage: Double, status: UsageStatus) -> some View {
-        switch iconStyle {
+        switch IconStyle.resolved(selected: iconStyle, showsCodex: showsCodex) {
         case .battery:
             BatteryIcon(percentage: percentage, status: status, isLoading: isLoading, isStale: isStale)
         case .circular:

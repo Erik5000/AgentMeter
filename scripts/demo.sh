@@ -1,5 +1,5 @@
 #!/bin/bash
-# Demo mode launcher for ClaudeMeter (macOS)
+# Demo mode launcher for AgentMeter (macOS)
 # Builds and runs the app with selected demo mode
 
 set -e
@@ -19,7 +19,7 @@ MODES=(
     "setupWizard|First-time setup screen"
 )
 
-echo "=== ClaudeMeter Demo Mode Launcher ==="
+echo "=== AgentMeter Demo Mode Launcher ==="
 echo ""
 echo "Select a demo mode:"
 echo ""
@@ -59,7 +59,7 @@ xcodebuild -project "$PROJECT_DIR/ClaudeMeter.xcodeproj" \
     build 2>&1 | tail -20
 
 # Find the built app
-APP_PATH=$(find "$BUILD_DIR/Build/Products" -name "ClaudeMeter.app" -type d 2>/dev/null | head -1)
+APP_PATH=$(find "$BUILD_DIR/Build/Products" -name "AgentMeter.app" -type d 2>/dev/null | head -1)
 
 if [ -z "$APP_PATH" ]; then
     echo "Error: Could not find built app in $BUILD_DIR/Build/Products"
@@ -70,7 +70,7 @@ fi
 echo "Found app: $APP_PATH"
 
 # Kill any existing instance
-pkill -f "ClaudeMeter.app" 2>/dev/null || true
+pkill -f "AgentMeter.app" 2>/dev/null || true
 sleep 0.5
 
 # Launch with demo argument

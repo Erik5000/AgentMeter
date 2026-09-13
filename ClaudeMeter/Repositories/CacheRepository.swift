@@ -29,7 +29,8 @@ actor CacheRepository: CacheRepositoryProtocol {
 
         self.diskCacheURL = cacheDir.appendingPathComponent("usage_cache.json")
 
-        // Public JSON export at ~/.agentmeter/usage.json for external tools
+        // Public JSON export at ~/.agentmeter/usage.json for external tools.
+        // This file is Claude usage only; Codex is not written here.
         let homeDir = fileManager.homeDirectoryForCurrentUser
         let publicDir = homeDir.appendingPathComponent(
             AppIdentity.publicExportDirectoryName,

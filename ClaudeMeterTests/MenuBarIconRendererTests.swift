@@ -120,4 +120,21 @@ final class MenuBarIconRendererTests: XCTestCase {
 
         XCTAssertFalse(image.isTemplate)
     }
+
+    func test_menuBarIconRendersCodexDualBarWhileLoading() {
+        let renderer = MenuBarIconRenderer()
+
+        let image = renderer.render(
+            percentage: TestConstants.sessionPercentage,
+            status: .safe,
+            isLoading: true,
+            isStale: false,
+            iconStyle: .battery,
+            weeklyPercentage: TestConstants.weeklyPercentage,
+            showsCodex: true
+        )
+
+        XCTAssertGreaterThan(image.size.width, 0)
+        XCTAssertGreaterThan(image.size.height, 0)
+    }
 }

@@ -29,7 +29,7 @@ struct SetupWizardView: View {
                     .font(.title)
                     .fontWeight(.bold)
 
-                Text("Monitor your Claude.ai plan usage in real-time")
+                Text("Monitor Claude and Codex usage. Start with your Claude session.")
                     .font(.subheadline)
                     .foregroundColor(.secondary)
             }

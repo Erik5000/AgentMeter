@@ -14,6 +14,7 @@ actor UsageServiceStub: UsageServiceProtocol {
     let organizations: [Organization]
     let fetchDelay: Duration?
     private(set) var fetchWasCancelled = false
+    private(set) var fetchCallCount = 0
     private var fetchStarted = false
     private var fetchStartedWaiters: [CheckedContinuation<Void, Never>] = []
 
@@ -41,6 +42,7 @@ actor UsageServiceStub: UsageServiceProtocol {
     }
 
     func fetchUsage(forceRefresh: Bool) async throws -> UsageData {
+        fetchCallCount += 1
         fetchStarted = true
         let waiters = fetchStartedWaiters
         fetchStartedWaiters = []

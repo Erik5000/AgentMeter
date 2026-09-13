@@ -5,8 +5,8 @@ AgentMeter is a macOS menu bar app for **Claude and Codex** usage limits. Fork o
 ## Features
 
 - **Real-time usage monitoring** - Track Claude and Codex usage limits
-- **Menu bar integration** - Clean, colour-coded usage indicator that lives in your macOS menu bar
-- **Multiple icon styles** - Choose from 6 icon styles: Battery, Circular, Minimal, Segments, Dual Bar, or Gauge
+- **Menu bar integration** - Dual Bar by default so Claude and Codex can be compared side by side
+- **Multiple icon styles** - Dual Bar is used while Codex is shown; Battery, Circular, Minimal, Segments, Dual Bar, and Gauge are available when Codex is hidden
 - **Pacing indicator** - Flame icon warns when you're using Claude faster than sustainable pace
 - **Smart notifications** - Configurable alerts at warning and critical thresholds (defaults: 75% and 90%)
 - **Auto-refresh** - Automatic usage updates every 1 minute, 5 minutes, or 10 minutes
@@ -66,7 +66,7 @@ Current GitHub Releases are unsigned. On first launch, macOS Gatekeeper may bloc
 
 ### First Launch
 
-1. AgentMeter appears in your menu bar as a gauge icon
+1. AgentMeter appears in your menu bar as a Dual Bar icon
 2. The setup wizard will guide you through initial configuration
 3. Import from a browser signed in to [claude.ai](https://claude.ai), or paste your session manually
 4. The app validates your session and begins monitoring usage
@@ -115,7 +115,7 @@ Your Claude session key is stored in your browser cookies.
 
 ### Integration with External Tools
 
-AgentMeter exports usage data to `~/.agentmeter/usage.json` for use with external tools like Claude Code statusline scripts, shell prompts, or custom dashboards.
+AgentMeter exports Claude usage data to `~/.agentmeter/usage.json` for use with external tools like Claude Code statusline scripts, shell prompts, or custom dashboards. Codex usage is shown in the app but is not included in this file.
 
 **JSON format:**
 
@@ -171,6 +171,7 @@ Then configure Claude Code's `~/.claude/settings.json`:
 
 - macOS 14.0 (Sonoma) or later
 - Active Claude.ai account with a browser session or session key
+- Codex usage requires the Codex or ChatGPT app, or a `codex` CLI on your PATH
 - For browser import, a supported browser signed in to [claude.ai](https://claude.ai)
 
 ## Building from Source

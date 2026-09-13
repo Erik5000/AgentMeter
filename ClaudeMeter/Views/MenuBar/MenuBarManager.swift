@@ -125,13 +125,16 @@ final class MenuBarManager {
         let status = snapshot.status
         let isStale = snapshot.isStale
         let isLoading = snapshot.isLoading
-        let style = appModel.settings.iconStyle
-        let isColored = appModel.settings.isColoredIcon
         let showsCodex = snapshot.showsCodex
-        let claudeSession = clamped(snapshot.claudeSession)
-        let claudeWeekly = clamped(snapshot.claudeWeekly)
-        let codexSession = clamped(snapshot.codexSession ?? 0)
-        let codexWeekly = clamped(snapshot.codexWeekly ?? 0)
+        let style = IconStyle.resolved(
+            selected: appModel.settings.iconStyle,
+            showsCodex: showsCodex
+        )
+        let isColored = appModel.settings.isColoredIcon
+        let claudeSession = snapshot.claudeSession.map(clamped)
+        let claudeWeekly = snapshot.claudeWeekly.map(clamped)
+        let codexSession = snapshot.codexSession.map(clamped)
+        let codexWeekly = snapshot.codexWeekly.map(clamped)
 
         button.toolTip = snapshot.tooltip
         button.setAccessibilityLabel(snapshot.tooltip)

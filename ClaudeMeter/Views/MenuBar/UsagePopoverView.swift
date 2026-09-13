@@ -95,21 +95,25 @@ struct UsagePopoverView: View {
 
                         if appModel.settings.isCodexUsageShown {
                             UsageComparisonCardView(
-                                title: "5-Hour Session",
+                                title: UsageWindowTitle.session(
+                                    codexMinutes: appModel.codexUsageData?.sessionWindowMinutes
+                                ),
                                 icon: "clock.arrow.circlepath",
                                 metrics: sessionMetrics(),
                                 showsExactResetTime: appModel.settings.isResetTimeShown
                             )
 
                             UsageComparisonCardView(
-                                title: "Weekly Usage",
+                                title: UsageWindowTitle.weekly(
+                                    codexMinutes: appModel.codexUsageData?.weeklyWindowMinutes
+                                ),
                                 icon: "calendar",
                                 metrics: weeklyMetrics(),
                                 showsExactResetTime: appModel.settings.isResetTimeShown
                             )
                         } else if let usageData = appModel.usageData {
                             UsageCardView(
-                                title: "5-Hour Session",
+                                title: UsageWindowTitle.session(),
                                 usageLimit: usageData.sessionUsage,
                                 icon: "gauge.with.dots.needle.67percent",
                                 windowDuration: Constants.Pacing.sessionWindow,
@@ -118,7 +122,7 @@ struct UsagePopoverView: View {
                             )
 
                             UsageCardView(
-                                title: "Weekly Usage",
+                                title: UsageWindowTitle.weekly(),
                                 usageLimit: usageData.weeklyUsage,
                                 icon: "calendar",
                                 windowDuration: Constants.Pacing.weeklyWindow,
@@ -217,7 +221,7 @@ struct UsagePopoverView: View {
                 UsageProviderMetric(
                     id: "codex-session",
                     name: "Codex",
-                    detail: appModel.codexUsageData?.planType?.capitalized,
+                    detail: CodexPlanDisplay.formatted(appModel.codexUsageData?.planType),
                     icon: "terminal",
                     usageLimit: appModel.codexUsageData?.sessionUsage,
                     windowDuration: appModel.codexUsageData?.sessionWindowDuration,
@@ -249,7 +253,7 @@ struct UsagePopoverView: View {
                 UsageProviderMetric(
                     id: "codex-weekly",
                     name: "Codex",
-                    detail: appModel.codexUsageData?.planType?.capitalized,
+                    detail: CodexPlanDisplay.formatted(appModel.codexUsageData?.planType),
                     icon: "terminal",
                     usageLimit: appModel.codexUsageData?.weeklyUsage,
                     windowDuration: appModel.codexUsageData?.weeklyWindowDuration,

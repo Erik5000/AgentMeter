@@ -29,5 +29,8 @@ final class AppIdentityTests: XCTestCase {
         XCTAssertEqual(AppIdentity.codexClientName, "agentmeter")
         XCTAssertEqual(AppIdentity.copyrightLine, "© 2025 Edd Mann · © 2026 Erik Biebinger")
         XCTAssertEqual(AppIdentity.tagline, "Monitor Claude and Codex usage limits")
+        XCTAssertEqual(AppIdentity.forkAttribution, "Fork of ClaudeMeter by Edd Mann")
+        XCTAssertTrue(AppIdentity.notificationUsageDescription.contains("Claude"))
+        XCTAssertFalse(AppIdentity.notificationUsageDescription.localizedCaseInsensitiveContains("Codex"))
     }
 }

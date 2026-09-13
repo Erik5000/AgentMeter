@@ -49,6 +49,29 @@ final class UsagePopoverContentTests: XCTestCase {
         XCTAssertTrue(IconStyle.dualBarRequiredForCodexCaption.localizedCaseInsensitiveContains("Claude"))
         XCTAssertTrue(IconStyle.dualBarRequiredForCodexCaption.localizedCaseInsensitiveContains("Codex"))
     }
+
+    func test_resolvedIconStyle_usesDualBarWheneverCodexIsShown() {
+        XCTAssertEqual(IconStyle.resolved(selected: .battery, showsCodex: true), .dualBar)
+        XCTAssertEqual(IconStyle.resolved(selected: .gauge, showsCodex: true), .dualBar)
+        XCTAssertEqual(IconStyle.resolved(selected: .battery, showsCodex: false), .battery)
+    }
+
+    func test_usageWindowTitle_usesActualCodexDuration() {
+        XCTAssertEqual(UsageWindowTitle.session(codexMinutes: 300), "5-Hour Session")
+        XCTAssertEqual(UsageWindowTitle.weekly(codexMinutes: 10_080), "Weekly Usage")
+        XCTAssertEqual(UsageWindowTitle.weekly(codexMinutes: 43_200), "Monthly Usage")
+        XCTAssertEqual(UsageWindowTitle.session(codexMinutes: 90), "90-Minute Window")
+        XCTAssertEqual(UsageWindowTitle.session(codexMinutes: nil), "5-Hour Session")
+    }
+
+    func test_codexPlanDisplay_replacesUnderscores() {
+        XCTAssertEqual(
+            CodexPlanDisplay.formatted("self_serve_business_prolite"),
+            "Self Serve Business Prolite"
+        )
+        XCTAssertEqual(CodexPlanDisplay.formatted("plus"), "Plus")
+        XCTAssertNil(CodexPlanDisplay.formatted(nil))
+    }
 }
 
 private func makeClaudeUsageData() -> UsageData {

@@ -69,8 +69,10 @@ actor CodexUsageService: CodexUsageServiceProtocol {
             if process.isRunning {
                 process.terminate()
             }
+            process.waitUntilExit()
         }
 
+        let writer = inputPipe.fileHandleForWriting
         do {
             try writeMessage(
                 [
@@ -84,23 +86,15 @@ actor CodexUsageService: CodexUsageServiceProtocol {
                         ]
                     ]
                 ],
-                to: inputPipe.fileHandleForWriting
-            )
-            try writeMessage(
-                ["method": "initialized", "params": [:]],
-                to: inputPipe.fileHandleForWriting
-            )
-            try writeMessage(
-                ["method": "account/rateLimits/read", "id": 1],
-                to: inputPipe.fileHandleForWriting
+                to: writer
             )
         } catch {
             throw CodexUsageError.failedToStart
         }
 
-        let responseData = try await readResponse(
-            withID: 1,
+        let responseData = try await readRateLimitsAfterInitialize(
             from: outputPipe.fileHandleForReading,
+            writer: writer,
             process: process
         )
         return try Self.parseRateLimitsResponse(responseData)
@@ -126,11 +120,18 @@ actor CodexUsageService: CodexUsageServiceProtocol {
             throw CodexUsageError.invalidResponse
         }
 
+        let windows = [primary, limits.secondary].compactMap { $0 }
+        let sorted = windows.sorted { lhs, rhs in
+            (lhs.windowDurationMins ?? .infinity) < (rhs.windowDurationMins ?? .infinity)
+        }
+        let session = sorted[0]
+        let weekly = sorted.dropFirst().first
+
         return CodexUsageData(
-            sessionUsage: primary.usageLimit,
-            sessionWindowMinutes: primary.windowDurationMins,
-            weeklyUsage: limits.secondary?.usageLimit,
-            weeklyWindowMinutes: limits.secondary?.windowDurationMins,
+            sessionUsage: session.usageLimit(now: now),
+            sessionWindowMinutes: session.windowDurationMins,
+            weeklyUsage: weekly?.usageLimit(now: now),
+            weeklyWindowMinutes: weekly?.windowDurationMins,
             planType: limits.planType,
             lastUpdated: now
         )
@@ -141,26 +142,51 @@ actor CodexUsageService: CodexUsageServiceProtocol {
             ?? "unknown"
     }
 
-    private func writeMessage(_ message: [String: Any], to handle: FileHandle) throws {
+    private nonisolated func writeMessage(_ message: [String: Any], to handle: FileHandle) throws {
         var data = try JSONSerialization.data(withJSONObject: message)
         data.append(0x0A)
         try handle.write(contentsOf: data)
     }
 
-    private func readResponse(
-        withID expectedID: Int,
+    private func readRateLimitsAfterInitialize(
         from handle: FileHandle,
+        writer: FileHandle,
         process: Process
     ) async throws -> Data {
         try await withThrowingTaskGroup(of: Data.self) { group in
             group.addTask {
+                var didCompleteHandshake = false
                 for try await line in handle.bytes.lines {
                     guard let data = line.data(using: .utf8),
                           let object = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
-                          (object["id"] as? NSNumber)?.intValue == expectedID else {
+                          let id = (object["id"] as? NSNumber)?.intValue else {
                         continue
                     }
-                    return data
+
+                    if id == 0, !didCompleteHandshake {
+                        if let error = object["error"] as? [String: Any] {
+                            let message = error["message"] as? String ?? "Codex initialize failed."
+                            throw CodexUsageError.serverError(message)
+                        }
+                        do {
+                            try self.writeMessage(
+                                ["method": "initialized", "params": [:]],
+                                to: writer
+                            )
+                            try self.writeMessage(
+                                ["method": "account/rateLimits/read", "id": 1],
+                                to: writer
+                            )
+                        } catch {
+                            throw CodexUsageError.failedToStart
+                        }
+                        didCompleteHandshake = true
+                        continue
+                    }
+
+                    if id == 1 {
+                        return data
+                    }
                 }
                 throw CodexUsageError.invalidResponse
             }
@@ -181,21 +207,41 @@ actor CodexUsageService: CodexUsageServiceProtocol {
         }
     }
 
-    private static func defaultExecutableCandidates(fileManager: FileManager) -> [URL] {
+    static func defaultExecutableCandidates(
+        fileManager: FileManager,
+        path: String? = ProcessInfo.processInfo.environment["PATH"]
+    ) -> [URL] {
         let home = fileManager.homeDirectoryForCurrentUser
-        let fixedPaths = [
+        var ordered: [URL] = []
+        var seen = Set<String>()
+
+        func append(_ url: URL) {
+            if seen.insert(url.path).inserted {
+                ordered.append(url)
+            }
+        }
+
+        [
             "/Applications/ChatGPT.app/Contents/Resources/codex",
             "/Applications/Codex.app/Contents/Resources/codex",
             "/opt/homebrew/bin/codex",
             "/usr/local/bin/codex"
-        ].map(URL.init(fileURLWithPath:))
+        ].map(URL.init(fileURLWithPath:)).forEach(append)
 
-        let userPaths = [
-            home.appendingPathComponent("Applications/ChatGPT.app/Contents/Resources/codex"),
-            home.appendingPathComponent("Applications/Codex.app/Contents/Resources/codex")
-        ]
+        append(home.appendingPathComponent("Applications/ChatGPT.app/Contents/Resources/codex"))
+        append(home.appendingPathComponent("Applications/Codex.app/Contents/Resources/codex"))
+        append(home.appendingPathComponent(".local/bin/codex"))
 
-        return fixedPaths + userPaths
+        if let path {
+            for component in path.split(separator: ":") where !component.isEmpty {
+                append(
+                    URL(fileURLWithPath: String(component), isDirectory: true)
+                        .appendingPathComponent("codex")
+                )
+            }
+        }
+
+        return ordered
     }
 }
 
@@ -215,13 +261,16 @@ private struct RateLimitsRPCResponse: Decodable {
 
     struct Window: Decodable {
         let usedPercent: Double
-        let windowDurationMins: Double
-        let resetsAt: Double
+        let windowDurationMins: Double?
+        let resetsAt: Double?
 
-        var usageLimit: UsageLimit {
-            UsageLimit(
+        func usageLimit(now: Date) -> UsageLimit {
+            let fallbackMinutes = windowDurationMins ?? 300
+            let resetAt = resetsAt.map { Date(timeIntervalSince1970: $0) }
+                ?? now.addingTimeInterval(fallbackMinutes * 60)
+            return UsageLimit(
                 utilization: usedPercent,
-                resetAt: Date(timeIntervalSince1970: resetsAt)
+                resetAt: resetAt
             )
         }
     }

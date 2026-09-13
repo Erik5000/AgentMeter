@@ -9,7 +9,7 @@ import Foundation
 
 /// Menu bar icon display style
 enum IconStyle: String, Codable, CaseIterable, Identifiable, Sendable {
-    case battery        // Gradient bar + percentage (DEFAULT)
+    case battery        // Gradient bar + percentage
     case circular       // Donut gauge with percentage in center
     case minimal        // Just color-coded percentage text
     case segments       // 5 segments like signal bars
@@ -45,6 +45,10 @@ enum IconStyle: String, Codable, CaseIterable, Identifiable, Sendable {
     /// Icon style is forced to Dual Bar while Codex usage is shown, so the picker is inert.
     static func isPickerEnabled(isCodexUsageShown: Bool) -> Bool {
         !isCodexUsageShown
+    }
+
+    static func resolved(selected: IconStyle, showsCodex: Bool) -> IconStyle {
+        showsCodex ? .dualBar : selected
     }
 
     static let dualBarRequiredForCodexCaption =

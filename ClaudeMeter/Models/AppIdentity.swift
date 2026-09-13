@@ -13,4 +13,7 @@ enum AppIdentity {
     static let codexClientName = "agentmeter"
     static let copyrightLine = "© 2025 Edd Mann · © 2026 Erik Biebinger"
     static let tagline = "Monitor Claude and Codex usage limits"
+    static let forkAttribution = "Fork of ClaudeMeter by Edd Mann"
+    static let notificationUsageDescription =
+        "AgentMeter sends notifications when Claude session usage approaches warning or critical thresholds and when a usage window resets."
 }

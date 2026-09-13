@@ -20,10 +20,10 @@ struct MenuBarIconRenderer {
         weeklyPercentage: Double = 0,
         isColored: Bool = true,
         showsCodex: Bool = false,
-        claudeSession: Double = 0,
-        claudeWeekly: Double = 0,
-        codexSession: Double = 0,
-        codexWeekly: Double = 0
+        claudeSession: Double? = nil,
+        claudeWeekly: Double? = nil,
+        codexSession: Double? = nil,
+        codexWeekly: Double? = nil
     ) -> NSImage {
         let iconView = MenuBarIconView(
             percentage: percentage,

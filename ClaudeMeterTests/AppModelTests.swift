@@ -189,6 +189,141 @@ final class AppModelTests: XCTestCase {
         XCTAssertTrue(claudeCancelled)
         XCTAssertTrue(codexCancelled)
         XCTAssertFalse(appModel.isRefreshing)
+        XCTAssertNil(appModel.errorMessage)
+        XCTAssertNil(appModel.codexErrorMessage)
+        XCTAssertNil(appModel.usageData)
+        XCTAssertNil(appModel.codexUsageData)
+    }
+
+    func test_refreshingUsage_whenCancelled_keepsExistingDataAndDoesNotShowCancelledError() async {
+        let existingUsage = makeUsageData(percentage: TestConstants.cachedPercentage)
+        let existingCodex = makeCodexUsageData()
+        let usageService = UsageServiceStub(
+            fetchUsageResult: .success(makeUsageData(percentage: TestConstants.sessionPercentage)),
+            fetchDelay: .seconds(5)
+        )
+        let codexUsageService = CodexUsageServiceStub(
+            result: .success(makeCodexUsageData()),
+            fetchDelay: .seconds(5)
+        )
+        let appModel = AppModel(
+            settingsRepository: SettingsRepositoryFake(),
+            keychainRepository: KeychainRepositoryFake(),
+            usageService: usageService,
+            codexUsageService: codexUsageService,
+            notificationService: NotificationServiceSpy()
+        )
+        appModel.isSetupComplete = true
+        appModel.usageData = existingUsage
+        appModel.codexUsageData = existingCodex
+
+        let refresh = Task {
+            await appModel.refreshUsage(forceRefresh: true)
+        }
+        await usageService.waitUntilFetchStarted()
+        await codexUsageService.waitUntilFetchStarted()
+        refresh.cancel()
+        await refresh.value
+
+        XCTAssertNil(appModel.errorMessage)
+        XCTAssertNil(appModel.codexErrorMessage)
+        XCTAssertEqual(appModel.usageData, existingUsage)
+        XCTAssertEqual(appModel.codexUsageData, existingCodex)
+        XCTAssertFalse(appModel.isRefreshing)
+        XCTAssertFalse(appModel.isLoading)
+    }
+
+    func test_overlappingRefresh_isNotDropped() async {
+        let usageService = UsageServiceStub(
+            fetchUsageResult: .success(makeUsageData(percentage: TestConstants.sessionPercentage)),
+            fetchDelay: .seconds(5)
+        )
+        let appModel = AppModel(
+            settingsRepository: SettingsRepositoryFake(),
+            keychainRepository: KeychainRepositoryFake(),
+            usageService: usageService,
+            notificationService: NotificationServiceSpy()
+        )
+        appModel.isSetupComplete = true
+
+        let first = Task { await appModel.refreshUsage(forceRefresh: true) }
+        await usageService.waitUntilFetchStarted()
+        let second = Task { await appModel.refreshUsage(forceRefresh: true) }
+        await Task.yield()
+        try? await Task.sleep(for: .milliseconds(50))
+
+        let fetchCount = await usageService.fetchCallCount
+        XCTAssertEqual(fetchCount, 2)
+
+        first.cancel()
+        second.cancel()
+        await first.value
+        await second.value
+        XCTAssertFalse(appModel.isRefreshing)
+    }
+
+    func test_clearingSessionDuringRefresh_doesNotReviveUsageData() async throws {
+        let usageService = UsageServiceStub(
+            fetchUsageResult: .success(makeUsageData(percentage: TestConstants.sessionPercentage)),
+            fetchDelay: .seconds(5)
+        )
+        let codexUsageService = CodexUsageServiceStub(
+            result: .success(makeCodexUsageData()),
+            fetchDelay: .seconds(5)
+        )
+        let keychainRepository = KeychainRepositoryFake()
+        let appModel = AppModel(
+            settingsRepository: SettingsRepositoryFake(),
+            keychainRepository: keychainRepository,
+            usageService: usageService,
+            codexUsageService: codexUsageService,
+            notificationService: NotificationServiceSpy()
+        )
+        appModel.isSetupComplete = true
+        try await keychainRepository.save(
+            sessionKey: TestConstants.sessionKeyValue,
+            account: "default"
+        )
+
+        let refresh = Task { await appModel.refreshUsage(forceRefresh: true) }
+        await usageService.waitUntilFetchStarted()
+        try await appModel.clearSessionKey()
+        await refresh.value
+
+        XCTAssertFalse(appModel.isSetupComplete)
+        XCTAssertNil(appModel.usageData)
+        XCTAssertNil(appModel.codexUsageData)
+        XCTAssertNil(appModel.errorMessage)
+        XCTAssertNil(appModel.codexErrorMessage)
+    }
+
+    func test_enablingCodex_forcesDualBarIconStyle() async throws {
+        var stored = AppSettings.default
+        stored.isCodexUsageShown = false
+        stored.iconStyle = .battery
+        let settingsRepository = SettingsRepositoryFake()
+        try await settingsRepository.save(stored)
+        let keychainRepository = KeychainRepositoryFake()
+        try await keychainRepository.save(
+            sessionKey: TestConstants.sessionKeyValue,
+            account: "default"
+        )
+        let appModel = AppModel(
+            settingsRepository: settingsRepository,
+            keychainRepository: keychainRepository,
+            usageService: UsageServiceStub(
+                fetchUsageResult: .success(makeUsageData(percentage: TestConstants.sessionPercentage))
+            ),
+            codexUsageService: CodexUsageServiceStub(result: .success(makeCodexUsageData())),
+            notificationService: NotificationServiceSpy()
+        )
+
+        await appModel.bootstrap()
+        XCTAssertEqual(appModel.settings.iconStyle, .battery)
+
+        appModel.settings.isCodexUsageShown = true
+
+        XCTAssertEqual(appModel.settings.iconStyle, .dualBar)
     }
 
     func test_refreshingUsage_keepsClaudeUsageWhenCodexFails() async {
@@ -273,10 +408,16 @@ final class AppModelTests: XCTestCase {
 
         appModel.isSetupComplete = false
         appModel.usageData = makeUsageData(percentage: TestConstants.cachedPercentage)
+        appModel.codexUsageData = makeCodexUsageData()
+        appModel.codexErrorMessage = "Codex unavailable"
+        appModel.errorMessage = TestConstants.previousErrorMessage
 
         await appModel.refreshUsage(forceRefresh: false)
 
         XCTAssertNil(appModel.usageData)
+        XCTAssertNil(appModel.codexUsageData)
+        XCTAssertNil(appModel.errorMessage)
+        XCTAssertNil(appModel.codexErrorMessage)
         XCTAssertNil(notificationService.lastEvaluatedUsageData)
     }
 

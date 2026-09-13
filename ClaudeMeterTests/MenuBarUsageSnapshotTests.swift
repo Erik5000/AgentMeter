@@ -72,13 +72,16 @@ final class MenuBarUsageSnapshotTests: XCTestCase {
         )
 
         XCTAssertTrue(snapshot.showsCodex)
-        XCTAssertEqual(snapshot.codexSession, 0)
-        XCTAssertEqual(snapshot.codexWeekly, 0)
+        XCTAssertNil(snapshot.codexSession)
+        XCTAssertNil(snapshot.codexWeekly)
+        XCTAssertNil(snapshot.codexDisplayedPercentage)
         XCTAssertEqual(snapshot.displayedPercentage, 40)
         XCTAssertEqual(snapshot.status, .safe)
+        XCTAssertFalse(snapshot.tooltip.contains("Codex 0%"))
+        XCTAssertTrue(snapshot.tooltip.contains("Codex unavailable"))
     }
 
-    func test_withoutClaudeData_canStillShowCodex() {
+    func test_withoutClaudeData_doesNotTreatMissingClaudeAsZeroPercent() {
         let snapshot = MenuBarUsageSnapshot.make(
             claude: nil,
             codex: makeCodexUsage(session: 55, weekly: 18),
@@ -88,9 +91,49 @@ final class MenuBarUsageSnapshotTests: XCTestCase {
 
         XCTAssertEqual(snapshot.displayedPercentage, 55)
         XCTAssertEqual(snapshot.status, .warning)
-        XCTAssertEqual(snapshot.claudeSession, 0)
-        XCTAssertEqual(snapshot.claudeWeekly, 0)
+        XCTAssertNil(snapshot.claudeSession)
+        XCTAssertNil(snapshot.claudeWeekly)
         XCTAssertEqual(snapshot.codexSession, 55)
+        XCTAssertFalse(snapshot.tooltip.contains("Claude 0%"))
+        XCTAssertTrue(snapshot.tooltip.contains("Claude unavailable"))
+    }
+
+    func test_isStale_whenOnlyCodexDataIsOlderThanThreshold() {
+        let staleCodex = CodexUsageData(
+            sessionUsage: UsageLimit(utilization: 20, resetAt: Date().addingTimeInterval(3600)),
+            sessionWindowMinutes: 300,
+            weeklyUsage: UsageLimit(utilization: 10, resetAt: Date().addingTimeInterval(86_400)),
+            weeklyWindowMinutes: 10_080,
+            planType: "plus",
+            lastUpdated: Date().addingTimeInterval(-(Constants.Refresh.stalenessThreshold + 60))
+        )
+        let snapshot = MenuBarUsageSnapshot.make(
+            claude: nil,
+            codex: staleCodex,
+            isCodexUsageShown: true,
+            isLoading: false
+        )
+
+        XCTAssertTrue(snapshot.isStale)
+    }
+
+    func test_isStale_whenClaudeIsFreshAndCodexIsStale() {
+        let staleCodex = CodexUsageData(
+            sessionUsage: UsageLimit(utilization: 20, resetAt: Date().addingTimeInterval(3600)),
+            sessionWindowMinutes: 300,
+            weeklyUsage: nil,
+            weeklyWindowMinutes: nil,
+            planType: "plus",
+            lastUpdated: Date().addingTimeInterval(-(Constants.Refresh.stalenessThreshold + 60))
+        )
+        let snapshot = MenuBarUsageSnapshot.make(
+            claude: makeClaudeUsage(session: 10, weekly: 10),
+            codex: staleCodex,
+            isCodexUsageShown: true,
+            isLoading: false
+        )
+
+        XCTAssertTrue(snapshot.isStale)
     }
 
     private func makeClaudeUsage(session: Double, weekly: Double) -> UsageData {

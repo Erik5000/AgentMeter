@@ -24,7 +24,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         SessionKeyImportPromptCoordinator.install()
 
         guard let appModel else {
-            let fallbackModel = AppModel()
+            let fallbackModel = AppModel(codexUsageService: CodexUsageService())
             self.appModel = fallbackModel
             startMenuBar(with: fallbackModel)
             return

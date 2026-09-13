@@ -10,12 +10,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 - Forked from ClaudeMeter; product name is AgentMeter.
 - Tracks Codex usage alongside Claude.
-- Cache export path is `~/.agentmeter/usage.json`.
+- Cache export path is `~/.agentmeter/usage.json` (Claude usage only).
 - GitHub Releases are unsigned; README documents the Gatekeeper bypass for first launch.
 
 ### Fixed
 - Show Codex usage in the popover when Claude data is missing, instead of a perpetual loading state.
 - Disable the menu-bar icon style picker while Codex usage is on (Dual Bar is required).
+- Ignore cancelled refreshes instead of showing them as fetch errors.
+- Decode Codex windows with null `resetsAt` / `windowDurationMins`.
+- Keep overlapping refreshes (including the Codex toggle) instead of dropping them.
+- Treat missing Claude/Codex data as unavailable in the menu bar, not 0%.
 
 ## [1.4.0] - 2026-05-19
 

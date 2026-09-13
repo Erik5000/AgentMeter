@@ -8,10 +8,10 @@ struct MenuBarUsageSnapshot: Equatable, Sendable {
     let isLoading: Bool
     let isStale: Bool
     let showsCodex: Bool
-    let claudeSession: Double
-    let claudeWeekly: Double
-    let claudeDisplayedPercentage: Double
-    let claudeStatus: UsageStatus
+    let claudeSession: Double?
+    let claudeWeekly: Double?
+    let claudeDisplayedPercentage: Double?
+    let claudeStatus: UsageStatus?
     let codexSession: Double?
     let codexWeekly: Double?
     let codexDisplayedPercentage: Double?
@@ -24,19 +24,25 @@ struct MenuBarUsageSnapshot: Equatable, Sendable {
         isCodexUsageShown: Bool,
         isLoading: Bool
     ) -> MenuBarUsageSnapshot {
-        let claudeSession = claude?.sessionUsage.percentage ?? 0
-        let claudeWeekly = claude?.weeklyUsage.percentage ?? 0
-        let claudeDisplayedPercentage = max(claudeSession, claudeWeekly)
-        let claudeStatus = UsageStatus.forPercentage(claudeDisplayedPercentage)
+        let claudeSession = claude?.sessionUsage.percentage
+        let claudeWeekly = claude?.weeklyUsage.percentage
+        let claudeDisplayedPercentage = claude.map {
+            max($0.sessionUsage.percentage, $0.weeklyUsage.percentage)
+        }
+        let claudeStatus = claudeDisplayedPercentage.map(UsageStatus.forPercentage)
         let showsCodex = isCodexUsageShown
-        let codexSession = showsCodex ? (codex?.sessionUsage.percentage ?? 0) : nil
-        let codexWeekly = showsCodex ? (codex?.weeklyUsage?.percentage ?? 0) : nil
-        let codexDisplayedPercentage = showsCodex ? max(codexSession ?? 0, codexWeekly ?? 0) : nil
+        let codexSession = showsCodex ? codex?.sessionUsage.percentage : nil
+        let codexWeekly = showsCodex ? codex?.weeklyUsage?.percentage : nil
+        let codexDisplayedPercentage: Double? = {
+            guard showsCodex, let codex else { return nil }
+            return max(codex.sessionUsage.percentage, codex.weeklyUsage?.percentage ?? 0)
+        }()
         let codexStatus = codexDisplayedPercentage.map(UsageStatus.forPercentage)
 
-        var candidates: [(percentage: Double, status: UsageStatus)] = [
-            (claudeDisplayedPercentage, claudeStatus)
-        ]
+        var candidates: [(percentage: Double, status: UsageStatus)] = []
+        if let claudeDisplayedPercentage, let claudeStatus {
+            candidates.append((claudeDisplayedPercentage, claudeStatus))
+        }
         if let codexDisplayedPercentage, let codexStatus {
             candidates.append((codexDisplayedPercentage, codexStatus))
         }
@@ -48,23 +54,15 @@ struct MenuBarUsageSnapshot: Equatable, Sendable {
             return lhs.percentage < rhs.percentage
         }
 
-        var tooltipParts = [
-            "Claude \(Int(claudeDisplayedPercentage))%",
-            "Claude session \(Int(claudeSession))%",
-            "Claude weekly \(Int(claudeWeekly))%"
-        ]
-        if showsCodex {
-            tooltipParts.insert("Codex \(Int(codexDisplayedPercentage ?? 0))%", at: 1)
-            tooltipParts.append("Codex session \(Int(codexSession ?? 0))%")
-            tooltipParts.append("Codex weekly \(Int(codexWeekly ?? 0))%")
-        }
+        let claudeStale = claude?.isStale ?? false
+        let codexStale = showsCodex && (codex?.isStale ?? false)
 
         return MenuBarUsageSnapshot(
             displayedPercentage: leading?.percentage ?? 0,
-            weeklyPercentage: claudeWeekly,
+            weeklyPercentage: claudeWeekly ?? 0,
             status: leading?.status ?? .safe,
             isLoading: isLoading,
-            isStale: claude?.isStale ?? false,
+            isStale: claudeStale || codexStale,
             showsCodex: showsCodex,
             claudeSession: claudeSession,
             claudeWeekly: claudeWeekly,
@@ -74,7 +72,56 @@ struct MenuBarUsageSnapshot: Equatable, Sendable {
             codexWeekly: codexWeekly,
             codexDisplayedPercentage: codexDisplayedPercentage,
             codexStatus: codexStatus,
-            tooltip: tooltipParts.joined(separator: ", ")
+            tooltip: tooltip(
+                showsCodex: showsCodex,
+                claudeDisplayedPercentage: claudeDisplayedPercentage,
+                claudeSession: claudeSession,
+                claudeWeekly: claudeWeekly,
+                codexDisplayedPercentage: codexDisplayedPercentage,
+                codexSession: codexSession,
+                codexWeekly: codexWeekly,
+                hasCodexData: codex != nil
+            )
         )
+    }
+
+    private static func tooltip(
+        showsCodex: Bool,
+        claudeDisplayedPercentage: Double?,
+        claudeSession: Double?,
+        claudeWeekly: Double?,
+        codexDisplayedPercentage: Double?,
+        codexSession: Double?,
+        codexWeekly: Double?,
+        hasCodexData: Bool
+    ) -> String {
+        var parts: [String] = []
+        if let claudeDisplayedPercentage {
+            parts.append("Claude \(Int(claudeDisplayedPercentage))%")
+        } else {
+            parts.append("Claude unavailable")
+        }
+        if showsCodex {
+            if let codexDisplayedPercentage {
+                parts.append("Codex \(Int(codexDisplayedPercentage))%")
+            } else {
+                parts.append("Codex unavailable")
+            }
+        }
+        if let claudeSession, let claudeWeekly {
+            parts.append("Claude session \(Int(claudeSession))%")
+            parts.append("Claude weekly \(Int(claudeWeekly))%")
+        }
+        if showsCodex, hasCodexData {
+            if let codexSession {
+                parts.append("Codex session \(Int(codexSession))%")
+            }
+            if let codexWeekly {
+                parts.append("Codex weekly \(Int(codexWeekly))%")
+            } else {
+                parts.append("Codex weekly unavailable")
+            }
+        }
+        return parts.joined(separator: ", ")
     }
 }

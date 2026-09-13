@@ -10,16 +10,16 @@ import SwiftUI
 /// Dual bar menu bar icon showing session (top) and weekly (bottom) usage.
 /// When Codex is enabled, Claude is the left column and Codex is the right column.
 struct DualBarIcon: View {
-    let percentage: Double        // Displayed number (highest active limit)
-    let weeklyPercentage: Double  // Claude weekly when Codex is hidden
+    let percentage: Double
+    let weeklyPercentage: Double
     let status: UsageStatus
     let isLoading: Bool
     let isStale: Bool
     var showsCodex: Bool = false
-    var claudeSession: Double = 0
-    var claudeWeekly: Double = 0
-    var codexSession: Double = 0
-    var codexWeekly: Double = 0
+    var claudeSession: Double? = nil
+    var claudeWeekly: Double? = nil
+    var codexSession: Double? = nil
+    var codexWeekly: Double? = nil
 
     private let singleBarWidth: CGFloat = 32
     private let pairedBarWidth: CGFloat = 16
@@ -71,10 +71,10 @@ struct DualBarIcon: View {
         .accessibilityValue(status.accessibilityDescription)
     }
 
-    private func metricRow(claude: Double, codex: Double) -> some View {
+    private func metricRow(claude: Double?, codex: Double?) -> some View {
         HStack(spacing: 3) {
             ProgressBar(
-                percentage: claude,
+                percentage: claude ?? 0,
                 color: barColor(for: claude),
                 isStale: isStale
             )
@@ -83,7 +83,7 @@ struct DualBarIcon: View {
             compactPercent(claude)
 
             ProgressBar(
-                percentage: codex,
+                percentage: codex ?? 0,
                 color: barColor(for: codex),
                 isStale: isStale
             )
@@ -93,11 +93,18 @@ struct DualBarIcon: View {
         }
     }
 
-    private func compactPercent(_ value: Double) -> some View {
-        Text("\(Int(value))%")
-            .font(.system(size: 8, weight: .medium, design: .monospaced))
-            .foregroundColor(isStale ? .gray : UsageStatus.forPercentage(value).color)
-            .frame(minWidth: 22, alignment: .leading)
+    private func compactPercent(_ value: Double?) -> some View {
+        Group {
+            if let value {
+                Text("\(Int(value))%")
+                    .foregroundColor(isStale ? .gray : UsageStatus.forPercentage(value).color)
+            } else {
+                Text("—")
+                    .foregroundColor(.gray)
+            }
+        }
+        .font(.system(size: 8, weight: .medium, design: .monospaced))
+        .frame(minWidth: 22, alignment: .leading)
     }
 
     private var statusColor: Color {
@@ -105,26 +112,30 @@ struct DualBarIcon: View {
     }
 
     private var sessionBarValue: Double {
-        hasExplicitClaudeValues ? claudeSession : percentage
+        claudeSession ?? percentage
     }
 
     private var weeklyBarValue: Double {
-        hasExplicitClaudeValues ? claudeWeekly : weeklyPercentage
+        claudeWeekly ?? weeklyPercentage
     }
 
-    private var hasExplicitClaudeValues: Bool {
-        claudeSession != 0 || claudeWeekly != 0
-    }
-
-    private func barColor(for value: Double) -> Color {
-        isStale ? .gray : UsageStatus.forPercentage(value).color
+    private func barColor(for value: Double?) -> Color {
+        guard let value else {
+            return Color.gray.opacity(0.35)
+        }
+        return isStale ? .gray : UsageStatus.forPercentage(value).color
     }
 
     private var accessibilityLabel: String {
         if showsCodex {
-            return "Claude session \(Int(claudeSession)) percent, Codex session \(Int(codexSession)) percent, Claude weekly \(Int(claudeWeekly)) percent, Codex weekly \(Int(codexWeekly)) percent"
+            return "Claude session \(percentLabel(claudeSession)), Codex session \(percentLabel(codexSession)), Claude weekly \(percentLabel(claudeWeekly)), Codex weekly \(percentLabel(codexWeekly))"
         }
         return "Session \(Int(sessionBarValue)) percent, weekly \(Int(weeklyBarValue)) percent, showing \(Int(percentage)) percent"
+    }
+
+    private func percentLabel(_ value: Double?) -> String {
+        guard let value else { return "unavailable" }
+        return "\(Int(value)) percent"
     }
 }
 

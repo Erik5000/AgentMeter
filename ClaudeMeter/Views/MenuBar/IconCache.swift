@@ -24,10 +24,10 @@ final class IconCache {
         weeklyPercentage: Double,
         isColored: Bool,
         showsCodex: Bool = false,
-        claudeSession: Double = 0,
-        claudeWeekly: Double = 0,
-        codexSession: Double = 0,
-        codexWeekly: Double = 0
+        claudeSession: Double? = nil,
+        claudeWeekly: Double? = nil,
+        codexSession: Double? = nil,
+        codexWeekly: Double? = nil
     ) -> NSImage? {
         cache.object(forKey: cacheKey(
             percentage: percentage,
@@ -55,10 +55,10 @@ final class IconCache {
         weeklyPercentage: Double,
         isColored: Bool,
         showsCodex: Bool = false,
-        claudeSession: Double = 0,
-        claudeWeekly: Double = 0,
-        codexSession: Double = 0,
-        codexWeekly: Double = 0
+        claudeSession: Double? = nil,
+        claudeWeekly: Double? = nil,
+        codexSession: Double? = nil,
+        codexWeekly: Double? = nil
     ) {
         cache.setObject(
             image,
@@ -88,17 +88,18 @@ final class IconCache {
         weeklyPercentage: Double,
         isColored: Bool,
         showsCodex: Bool,
-        claudeSession: Double,
-        claudeWeekly: Double,
-        codexSession: Double,
-        codexWeekly: Double
+        claudeSession: Double?,
+        claudeWeekly: Double?,
+        codexSession: Double?,
+        codexWeekly: Double?
     ) -> NSString {
         let percent = String(format: "%.2f", percentage)
         let weekly = String(format: "%.2f", weeklyPercentage)
-        let claudeSessionValue = String(format: "%.2f", claudeSession)
-        let claudeWeeklyValue = String(format: "%.2f", claudeWeekly)
-        let codexSessionValue = String(format: "%.2f", codexSession)
-        let codexWeeklyValue = String(format: "%.2f", codexWeekly)
-        return "\(percent)|\(weekly)|\(status.rawValue)|\(isLoading)|\(isStale)|\(iconStyle.rawValue)|\(isColored)|\(showsCodex)|\(claudeSessionValue)|\(claudeWeeklyValue)|\(codexSessionValue)|\(codexWeeklyValue)" as NSString
+        return "\(percent)|\(weekly)|\(status.rawValue)|\(isLoading)|\(isStale)|\(iconStyle.rawValue)|\(isColored)|\(showsCodex)|\(cacheValue(claudeSession))|\(cacheValue(claudeWeekly))|\(cacheValue(codexSession))|\(cacheValue(codexWeekly))" as NSString
+    }
+
+    private func cacheValue(_ value: Double?) -> String {
+        guard let value else { return "nil" }
+        return String(format: "%.2f", value)
     }
 }
