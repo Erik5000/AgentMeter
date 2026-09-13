@@ -42,9 +42,12 @@ final class UsagePopoverContentTests: XCTestCase {
         )
     }
 
-    func test_iconStylePicker_isDisabledWhileCodexUsageIsShown() {
+    func test_iconStylePicker_locksNonDualBarStylesWhileCodexUsageIsShown() {
         XCTAssertFalse(IconStyle.isPickerEnabled(isCodexUsageShown: true))
         XCTAssertTrue(IconStyle.isPickerEnabled(isCodexUsageShown: false))
+        XCTAssertTrue(IconStyle.isSelectable(.dualBar, isCodexUsageShown: true))
+        XCTAssertFalse(IconStyle.isSelectable(.battery, isCodexUsageShown: true))
+        XCTAssertTrue(IconStyle.isSelectable(.battery, isCodexUsageShown: false))
         XCTAssertTrue(IconStyle.dualBarRequiredForCodexCaption.localizedCaseInsensitiveContains("Dual Bar"))
         XCTAssertTrue(IconStyle.dualBarRequiredForCodexCaption.localizedCaseInsensitiveContains("Claude"))
         XCTAssertTrue(IconStyle.dualBarRequiredForCodexCaption.localizedCaseInsensitiveContains("Codex"))
@@ -64,13 +67,25 @@ final class UsagePopoverContentTests: XCTestCase {
         XCTAssertEqual(UsageWindowTitle.session(codexMinutes: nil), "5-Hour Session")
     }
 
-    func test_codexPlanDisplay_replacesUnderscores() {
-        XCTAssertEqual(
-            CodexPlanDisplay.formatted("self_serve_business_prolite"),
-            "Self Serve Business Prolite"
-        )
+    func test_usageWindowTitle_comparisonUsesNeutralNames() {
+        XCTAssertEqual(UsageWindowTitle.comparisonSession(), "Session")
+        XCTAssertEqual(UsageWindowTitle.comparisonWeekly(codexMinutes: 10_080), "Week")
+        XCTAssertEqual(UsageWindowTitle.comparisonWeekly(codexMinutes: 43_200), "Month")
+        XCTAssertEqual(UsageWindowTitle.comparisonWeekly(codexMinutes: nil), "Week")
+    }
+
+    func test_codexPlanDisplay_usesFriendlyPlanNamesAndHidesInternalSkus() {
         XCTAssertEqual(CodexPlanDisplay.formatted("plus"), "Plus")
+        XCTAssertEqual(CodexPlanDisplay.formatted("self_serve_business_prolite"), "Pro")
+        XCTAssertEqual(CodexPlanDisplay.formatted("team"), "Team")
+        XCTAssertNil(CodexPlanDisplay.formatted("unknown_internal_sku_name"))
         XCTAssertNil(CodexPlanDisplay.formatted(nil))
+    }
+
+    func test_usageErrorPresentation_offersSessionRecoveryForAuthFailures() {
+        XCTAssertTrue(UsageErrorPresentation.offersSessionRecovery("Claude session expired. Update it in Settings."))
+        XCTAssertTrue(UsageErrorPresentation.offersSessionRecovery("Session key is invalid or expired"))
+        XCTAssertFalse(UsageErrorPresentation.offersSessionRecovery("No internet connection"))
     }
 }
 

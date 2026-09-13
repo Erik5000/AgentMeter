@@ -19,25 +19,23 @@ struct CircularGaugeIcon: View {
 
     var body: some View {
         ZStack {
-            // Background circle
             Circle()
                 .stroke(Color.gray.opacity(0.3), lineWidth: lineWidth)
 
-            // Progress arc
             Circle()
                 .trim(from: 0, to: min(percentage / 100, 1.0))
                 .stroke(statusColor, style: StrokeStyle(lineWidth: lineWidth, lineCap: .round))
                 .rotationEffect(.degrees(-90))
 
-            // Center percentage or loading indicator
             if isLoading {
                 Image(systemName: "arrow.clockwise")
                     .font(.system(size: 7, weight: .medium))
-                    .foregroundColor(statusColor)
+                    .foregroundStyle(statusColor)
             } else {
                 Text("\(Int(percentage))")
                     .font(.system(size: 7, weight: .bold, design: .rounded))
-                    .foregroundColor(statusColor)
+                    .monospacedDigit()
+                    .foregroundStyle(statusColor)
             }
         }
         .frame(width: size, height: size)

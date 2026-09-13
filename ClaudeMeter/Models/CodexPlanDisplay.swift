@@ -1,15 +1,32 @@
 import Foundation
 
 enum CodexPlanDisplay {
+    private static let knownPlans: [String: String] = [
+        "plus": "Plus",
+        "pro": "Pro",
+        "team": "Team",
+        "business": "Business",
+        "enterprise": "Enterprise",
+        "free": "Free",
+        "go": "Go",
+        "edu": "Edu",
+        "self_serve_business_prolite": "Pro"
+    ]
+
     static func formatted(_ planType: String?) -> String? {
         guard let planType else { return nil }
-        let words = planType
-            .replacingOccurrences(of: "_", with: " ")
-            .split(separator: " ")
-            .filter { !$0.isEmpty }
-        guard !words.isEmpty else { return nil }
-        return words
-            .map { $0.localizedCapitalized }
-            .joined(separator: " ")
+        let key = planType
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+            .lowercased()
+            .replacingOccurrences(of: "-", with: "_")
+        if let known = knownPlans[key] {
+            return known
+        }
+
+        guard key.count <= 12, !key.contains("_"), !key.isEmpty else {
+            return nil
+        }
+
+        return planType.trimmingCharacters(in: .whitespacesAndNewlines).localizedCapitalized
     }
 }

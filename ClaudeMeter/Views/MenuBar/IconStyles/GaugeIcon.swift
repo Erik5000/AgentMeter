@@ -19,18 +19,18 @@ struct GaugeIcon: View {
             if isLoading {
                 Image(systemName: "arrow.clockwise")
                     .font(.system(size: 14, weight: .medium))
-                    .foregroundColor(statusColor)
+                    .foregroundStyle(statusColor)
             } else {
                 Image(systemName: symbolName)
                     .font(.system(size: 14, weight: .medium))
-                    .foregroundColor(statusColor)
+                    .foregroundStyle(statusColor)
                     .symbolRenderingMode(.hierarchical)
             }
 
             if isStale && !isLoading {
                 Image(systemName: "exclamationmark.triangle.fill")
                     .font(.system(size: 8))
-                    .foregroundColor(.gray)
+                    .foregroundStyle(.gray)
             }
         }
         .frame(height: 22)
@@ -44,18 +44,18 @@ struct GaugeIcon: View {
     private var symbolName: String {
         let warning = Constants.Thresholds.Status.warningStart
         let critical = Constants.Thresholds.Status.criticalStart
-        let midWarning = (warning + critical) / 2  // Midpoint of warning range
+        let midWarning = (warning + critical) / 2
 
         switch percentage {
-        case 0..<(warning * 0.6):  // Low safe range
+        case 0..<(warning * 0.6):
             return "gauge.with.dots.needle.0percent"
-        case 0..<warning:  // High safe range
+        case 0..<warning:
             return "gauge.with.dots.needle.33percent"
-        case warning..<midWarning:  // Low warning range
+        case warning..<midWarning:
             return "gauge.with.dots.needle.50percent"
-        case midWarning..<critical:  // High warning range
+        case midWarning..<critical:
             return "gauge.with.dots.needle.67percent"
-        default:  // Critical range
+        default:
             return "gauge.with.dots.needle.100percent"
         }
     }

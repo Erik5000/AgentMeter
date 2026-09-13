@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-/// Battery-style menu bar icon with gradient fill
+/// Battery-style menu bar icon with a status-colored fill
 struct BatteryIcon: View {
     let percentage: Double
     let status: UsageStatus
@@ -22,53 +22,36 @@ struct BatteryIcon: View {
             if isLoading {
                 Image(systemName: "arrow.clockwise")
                     .font(.system(size: 10, weight: .medium))
-                    .foregroundColor(statusColor)
+                    .foregroundStyle(statusColor)
             } else {
-                // Capsule with gradient fill using mask for proper rounded ends
                 Capsule()
                     .fill(Color.gray.opacity(0.3))
                     .overlay(alignment: .leading) {
                         GeometryReader { geo in
-                            fillGradient
-                                .frame(width: geo.size.width * min(percentage / 100, 1.0))
+                            Capsule()
+                                .fill(statusColor)
+                                .frame(width: geo.size.width * min(max(percentage, 0) / 100, 1.0))
                         }
                         .clipShape(Capsule())
                     }
                     .frame(width: capsuleWidth, height: capsuleHeight)
 
-                // Percentage text
-                Text("\(Int(percentage))%") 
+                Text("\(Int(percentage))%")
                     .font(.system(size: 10, weight: .medium, design: .monospaced))
-                    .foregroundColor(statusColor)
+                    .monospacedDigit()
+                    .foregroundStyle(statusColor)
             }
 
             if isStale && !isLoading {
                 Image(systemName: "exclamationmark.triangle.fill")
                     .font(.system(size: 8))
-                    .foregroundColor(.gray)
+                    .foregroundStyle(.gray)
             }
         }
         .frame(height: 22)
         .padding(.horizontal, 4)
         .accessibilityLabel("Usage: \(Int(percentage)) percent")
         .accessibilityValue(status.accessibilityDescription)
-    }
-
-    private var fillGradient: LinearGradient {
-        if isStale {
-            return LinearGradient(
-                colors: [.gray, .gray],
-                startPoint: .leading,
-                endPoint: .trailing
-            )
-        }
-
-        // Gradient shows current status position
-        return LinearGradient(
-            colors: [.green, .yellow, .orange, .red],
-            startPoint: .leading,
-            endPoint: .trailing
-        )
     }
 
     private var statusColor: Color {

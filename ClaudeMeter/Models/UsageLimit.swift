@@ -124,6 +124,22 @@ extension UsageLimit {
         return formatter.string(from: resetAt)
     }
 
+    /// Single-line reset copy for cards. Compact form drops the "Resets" prefix.
+    func resetCaption(showsExactTime: Bool, usesTimeOnly: Bool, compact: Bool) -> String {
+        if isResetting {
+            return "Resetting…"
+        }
+
+        let relative = compact ? compactResetDescription : resetDescription
+        let prefix = compact ? relative : "Resets \(relative)"
+        guard showsExactTime else {
+            return prefix
+        }
+
+        let exact = usesTimeOnly ? resetTimeOnlyFormatted : resetTimeFormatted
+        return "\(prefix) · \(exact)"
+    }
+
     /// Check if limit has been exceeded
     var isExceeded: Bool {
         utilization >= 100

@@ -14,33 +14,26 @@ struct UsageProviderMetric: Identifiable {
 /// Side-by-side comparison of the same usage window across providers.
 struct UsageComparisonCardView: View {
     let title: String
-    let icon: String
     let metrics: [UsageProviderMetric]
     var showsExactResetTime: Bool = true
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            HStack(spacing: 8) {
-                Image(systemName: icon)
-                    .font(.title3)
-                    .foregroundStyle(.secondary)
-                Text(title)
-                    .font(.headline)
-            }
+        VStack(alignment: .leading, spacing: 10) {
+            Text(title)
+                .font(.subheadline.weight(.semibold))
 
             HStack(alignment: .top, spacing: 0) {
                 ForEach(Array(metrics.enumerated()), id: \.element.id) { index, metric in
                     if index > 0 {
                         Divider()
-                            .padding(.horizontal, 12)
+                            .padding(.horizontal, 10)
                     }
                     providerColumn(metric)
                 }
             }
         }
-        .padding(16)
-        .background(Color(nsColor: .controlBackgroundColor))
-        .cornerRadius(12)
+        .padding(14)
+        .background(.quaternary.opacity(0.35), in: RoundedRectangle(cornerRadius: 10, style: .continuous))
         .accessibilityElement(children: .combine)
         .accessibilityLabel(accessibilityLabel)
     }
@@ -48,80 +41,77 @@ struct UsageComparisonCardView: View {
     @ViewBuilder
     private func providerColumn(_ metric: UsageProviderMetric) -> some View {
         if let usageLimit = metric.usageLimit {
-            VStack(alignment: .leading, spacing: 8) {
-                HStack(spacing: 6) {
+            VStack(alignment: .leading, spacing: 6) {
+                HStack(spacing: 5) {
                     Image(systemName: metric.icon)
+                        .font(.caption)
                         .foregroundStyle(usageLimit.status.color)
                     Text(metric.name)
-                        .font(.subheadline.weight(.semibold))
+                        .font(.caption.weight(.semibold))
+                    Spacer(minLength: 0)
                     if let detail = metric.detail {
                         Text(detail)
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
-                    }
-                    Spacer(minLength: 0)
-                }
-
-                Text("\(Int(usageLimit.percentage))%")
-                    .font(.system(size: 28, weight: .bold, design: .rounded))
-                    .foregroundStyle(usageLimit.status.color)
-
-                GeometryReader { geometry in
-                    ZStack(alignment: .leading) {
-                        RoundedRectangle(cornerRadius: 4)
-                            .fill(Color.gray.opacity(0.2))
-                        RoundedRectangle(cornerRadius: 4)
-                            .fill(usageLimit.status.color)
-                            .frame(width: geometry.size.width * min(usageLimit.percentage / 100, 1.0))
+                            .font(.caption2)
+                            .foregroundStyle(.tertiary)
                     }
                 }
-                .frame(height: 6)
 
-                HStack(spacing: 4) {
-                    Image(systemName: "clock")
-                        .font(.caption2)
-                    VStack(alignment: .leading, spacing: 1) {
-                        Text("Resets \(usageLimit.compactResetDescription)")
-                        if showsExactResetTime {
-                            Text(metric.usesTimeOnlyResetTimestamp
-                                 ? usageLimit.resetTimeOnlyFormatted
-                                 : usageLimit.resetTimeFormatted)
-                        }
-                    }
-                    .font(.caption)
+                HStack(alignment: .firstTextBaseline, spacing: 6) {
+                    Text("\(Int(usageLimit.percentage))%")
+                        .font(.system(size: 22, weight: .semibold, design: .rounded))
+                        .monospacedDigit()
+                        .foregroundStyle(usageLimit.status.color)
+
                     Spacer(minLength: 0)
+
                     if let windowDuration = metric.windowDuration,
                        usageLimit.isAtRisk(windowDuration: windowDuration) {
-                        Image(systemName: "flame.fill")
-                            .font(.caption)
-                            .foregroundStyle(.orange)
-                            .help("You may hit your limit before it resets")
-                            .accessibilityLabel("At risk of hitting limit")
+                        UsagePacingIndicator(compact: true)
                     }
                 }
+
+                UsageMeterProgressBar(
+                    percentage: usageLimit.percentage,
+                    color: usageLimit.status.color,
+                    height: 4
+                )
+
+                Text(
+                    usageLimit.resetCaption(
+                        showsExactTime: showsExactResetTime,
+                        usesTimeOnly: metric.usesTimeOnlyResetTimestamp,
+                        compact: true
+                    )
+                )
+                .font(.caption2)
                 .foregroundStyle(.secondary)
+                .lineLimit(2)
+                .fixedSize(horizontal: false, vertical: true)
             }
             .frame(maxWidth: .infinity, alignment: .leading)
         } else {
-            VStack(alignment: .leading, spacing: 8) {
-                HStack(spacing: 6) {
+            VStack(alignment: .leading, spacing: 6) {
+                HStack(spacing: 5) {
                     Image(systemName: metric.icon)
-                        .foregroundStyle(.secondary)
+                        .font(.caption)
+                        .foregroundStyle(.tertiary)
                     Text(metric.name)
-                        .font(.subheadline.weight(.semibold))
+                        .font(.caption.weight(.semibold))
                     Spacer(minLength: 0)
                 }
 
-                if metric.placeholder == "Loading…" {
+                if metric.placeholder == "Updating" {
                     ProgressView()
-                        .controlSize(.small)
+                        .controlSize(.mini)
+                        .padding(.top, 6)
                 } else {
-                    Image(systemName: "minus.circle")
-                        .foregroundStyle(.secondary)
+                    Text("—")
+                        .font(.system(size: 22, weight: .semibold, design: .rounded))
+                        .foregroundStyle(.tertiary)
                 }
 
                 Text(metric.placeholder)
-                    .font(.caption)
+                    .font(.caption2)
                     .foregroundStyle(.secondary)
             }
             .frame(maxWidth: .infinity, alignment: .leading)

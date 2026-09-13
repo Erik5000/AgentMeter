@@ -9,6 +9,19 @@ enum UsageWindowTitle {
         displayName(minutes: codexMinutes, fallback: "Weekly Usage")
     }
 
+    static func comparisonSession() -> String {
+        "Session"
+    }
+
+    static func comparisonWeekly(codexMinutes: Double? = nil) -> String {
+        switch classification(codexMinutes ?? 7 * 24 * 60) {
+        case .monthly:
+            return "Month"
+        default:
+            return "Week"
+        }
+    }
+
     static func displayName(minutes: Double?, fallback: String) -> String {
         guard let minutes else { return fallback }
         switch classification(minutes) {

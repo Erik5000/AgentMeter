@@ -16,10 +16,15 @@ enum UsageStatus: String, Codable, Sendable {
     /// SwiftUI color for this status
     var color: Color {
         switch self {
-        case .safe: return .green
-        case .warning: return .orange
-        case .critical: return .red
+        case .safe: return Color(nsColor: .systemGreen)
+        case .warning: return Color(nsColor: .systemOrange)
+        case .critical: return Color(nsColor: .systemRed)
         }
+    }
+
+    /// Track behind a usage bar.
+    static var trackColor: Color {
+        Color.primary.opacity(0.12)
     }
 
     /// SF Symbol for status indicator

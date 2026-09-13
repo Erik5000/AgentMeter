@@ -19,17 +19,18 @@ struct MinimalIcon: View {
             if isLoading {
                 Image(systemName: "arrow.clockwise")
                     .font(.system(size: 11, weight: .medium))
-                    .foregroundColor(statusColor)
+                    .foregroundStyle(statusColor)
             } else {
                 Text("\(Int(percentage))%")
                     .font(.system(size: 13, weight: .semibold, design: .monospaced))
-                    .foregroundColor(statusColor)
+                    .monospacedDigit()
+                    .foregroundStyle(statusColor)
             }
 
             if isStale && !isLoading {
                 Image(systemName: "exclamationmark.triangle.fill")
                     .font(.system(size: 8))
-                    .foregroundColor(.gray)
+                    .foregroundStyle(.gray)
             }
         }
         .frame(height: 22)

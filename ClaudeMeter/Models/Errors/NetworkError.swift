@@ -20,19 +20,19 @@ enum NetworkError: LocalizedError {
     var errorDescription: String? {
         switch self {
         case .invalidURL:
-            return "Invalid API endpoint URL"
+            return "Couldn't reach Claude."
         case .invalidResponse:
-            return "Server returned invalid response"
+            return "Claude sent an unexpected response."
         case .authenticationFailed:
-            return "Session key is invalid or expired"
+            return "Claude session expired. Update it in Settings."
         case .rateLimitExceeded:
-            return "Rate limit exceeded. Please wait before retrying."
+            return "Too many requests. Try again in a moment."
         case .httpError(let code):
-            return "Server error (status \(code))"
+            return "Claude is unavailable (error \(code))."
         case .decodingFailed:
-            return "Failed to parse server response"
+            return "Couldn't read usage data."
         case .networkUnavailable:
-            return "No internet connection"
+            return "No internet connection."
         }
     }
 }

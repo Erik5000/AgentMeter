@@ -93,4 +93,34 @@ final class UsageLimitRiskTests: XCTestCase {
         XCTAssertEqual(UsageLimit.compactResetDescription(for: 2 * 24 * 60 * 60), "in 2d")
         XCTAssertEqual(UsageLimit.compactResetDescription(for: -60), "now")
     }
+
+    func test_resetCaption_joinsRelativeAndExactTimeWithoutParentheses() {
+        let resetAt = Date().addingTimeInterval(2 * 60 * 60)
+        let usageLimit = UsageLimit(utilization: 20, resetAt: resetAt)
+
+        XCTAssertEqual(
+            usageLimit.resetCaption(showsExactTime: false, usesTimeOnly: true, compact: false),
+            "Resets \(usageLimit.resetDescription)"
+        )
+        XCTAssertEqual(
+            usageLimit.resetCaption(showsExactTime: true, usesTimeOnly: true, compact: false),
+            "Resets \(usageLimit.resetDescription) · \(usageLimit.resetTimeOnlyFormatted)"
+        )
+        XCTAssertEqual(
+            usageLimit.resetCaption(showsExactTime: true, usesTimeOnly: true, compact: true),
+            "\(usageLimit.compactResetDescription) · \(usageLimit.resetTimeOnlyFormatted)"
+        )
+    }
+
+    func test_resetCaption_whenPastResetWithRemainingUsage_showsResetting() {
+        let usageLimit = UsageLimit(
+            utilization: 40,
+            resetAt: Date().addingTimeInterval(-60)
+        )
+
+        XCTAssertEqual(
+            usageLimit.resetCaption(showsExactTime: true, usesTimeOnly: true, compact: false),
+            "Resetting…"
+        )
+    }
 }

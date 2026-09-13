@@ -29,7 +29,7 @@ struct SettingsView: View {
             aboutTab
                 .tabItem { Label("About", systemImage: "info.circle") }
         }
-        .frame(width: 500)
+        .frame(width: 520)
         .onAppear {
             loadSettings()
         }
@@ -49,67 +49,48 @@ struct SettingsView: View {
     // MARK: - General Tab
 
     private var generalTab: some View {
-        VStack(alignment: .leading, spacing: 16) {
+        Form {
             if !appModel.isReady {
-                VStack {
-                    Spacer()
-                    ProgressView("Loading settings...")
-                        .controlSize(.large)
-                    Spacer()
-                }
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                ProgressView("Loading…")
+                    .frame(maxWidth: .infinity, minHeight: 360)
             } else {
-                sessionKeySection
-                refreshIntervalSection
-                sonnetUsageSection
-                codexUsageSection
-                resetTimeSection
-                iconStyleSection
-                launchAtLoginSection
+                claudeSection
+                popoverSection
+                refreshSection
+                menuBarSection
+                loginSection
             }
         }
-        .padding(24)
+        .formStyle(.grouped)
+        .frame(minHeight: 520, alignment: .top)
     }
 
-    // MARK: - Claude Session Section
-
-    private var sessionKeySection: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            HStack(alignment: .top) {
-                VStack(alignment: .leading, spacing: 4) {
-                    Text("Claude Session")
-                        .font(.subheadline)
-
-                    Text("Import from browser or paste your Claude session")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                        .lineLimit(2)
-                        .fixedSize(horizontal: false, vertical: true)
-                }
-
-                Spacer()
-
-                Label(sessionKey.isEmpty ? "Not configured" : "Saved in Keychain", systemImage: sessionKey.isEmpty ? "exclamationmark.circle" : "checkmark.circle")
-                    .font(.caption)
-                    .foregroundStyle(sessionKey.isEmpty ? Color.secondary : Color.green)
+    private var claudeSection: some View {
+        Section {
+            LabeledContent("Status") {
+                Text(sessionKey.isEmpty ? "Not added" : "Connected")
+                    .foregroundStyle(sessionKey.isEmpty ? Color.secondary : Color(nsColor: .systemGreen))
             }
 
-            HStack {
-                if isSessionKeyShown {
-                    TextField("sk-ant-...", text: $sessionKey)
-                        .textFieldStyle(.roundedBorder)
-                        .font(.system(.body, design: .monospaced))
-                } else {
-                    SecureField("sk-ant-...", text: $sessionKey)
-                        .textFieldStyle(.roundedBorder)
-                        .font(.system(.body, design: .monospaced))
+            HStack(spacing: 8) {
+                Group {
+                    if isSessionKeyShown {
+                        TextField("sk-ant-…", text: $sessionKey)
+                    } else {
+                        SecureField("sk-ant-…", text: $sessionKey)
+                    }
                 }
+                .font(.body.monospaced())
+                .textFieldStyle(.roundedBorder)
 
-                Button(action: { isSessionKeyShown.toggle() }) {
+                Button {
+                    isSessionKeyShown.toggle()
+                } label: {
                     Image(systemName: isSessionKeyShown ? "eye.slash" : "eye")
                 }
                 .buttonStyle(.borderless)
-                .help(isSessionKeyShown ? "Hide session key" : "Show session key")
+                .help(isSessionKeyShown ? "Hide session" : "Show session")
+                .accessibilityLabel(isSessionKeyShown ? "Hide session" : "Show session")
 
                 if !sessionKey.isEmpty {
                     Button(action: clearSessionKey) {
@@ -117,17 +98,17 @@ struct SettingsView: View {
                             .foregroundStyle(.secondary)
                     }
                     .buttonStyle(.borderless)
-                    .help("Clear session key")
+                    .help("Remove session")
+                    .accessibilityLabel("Remove session")
                 }
             }
 
-            HStack {
-                Button("Save") {
+            HStack(spacing: 8) {
+                Button("Save Session") {
                     Task {
                         await validateAndSaveSessionKey()
                     }
                 }
-                .controlSize(.small)
                 .disabled(sessionKey.isEmpty || isSessionKeyBusy)
 
                 Button("Import from Browser") {
@@ -135,7 +116,6 @@ struct SettingsView: View {
                         await importAndSaveSessionKey()
                     }
                 }
-                .controlSize(.small)
                 .disabled(isSessionKeyBusy)
 
                 if isSessionKeyBusy {
@@ -144,374 +124,201 @@ struct SettingsView: View {
                 }
 
                 if let message = sessionKeyValidationMessage, hasSessionKeyValidationSucceeded {
-                    Label(message, systemImage: "checkmark.circle.fill")
+                    Text(message)
                         .font(.caption)
-                        .foregroundStyle(.green)
+                        .foregroundStyle(Color(nsColor: .systemGreen))
                         .lineLimit(1)
-                        .truncationMode(.tail)
                 }
 
-                Spacer()
+                Spacer(minLength: 0)
             }
 
             if let message = sessionKeyValidationMessage, !hasSessionKeyValidationSucceeded {
                 VStack(alignment: .leading, spacing: 6) {
-                    HStack(alignment: .top, spacing: 6) {
-                        Image(systemName: "xmark.circle.fill")
-                            .foregroundStyle(.red)
-                            .frame(width: 16)
-
-                        Text(message)
-                            .font(.caption)
-                            .foregroundStyle(.red)
-                            .lineLimit(3)
-                            .fixedSize(horizontal: false, vertical: true)
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                    }
+                    Text(message)
+                        .font(.caption)
+                        .foregroundStyle(Color(nsColor: .systemRed))
+                        .fixedSize(horizontal: false, vertical: true)
 
                     if offersFullDiskAccessSettings {
                         Button("Open Full Disk Access") {
                             SystemSettingsOpener.openFullDiskAccess()
                         }
                         .controlSize(.small)
-                        .padding(.leading, 22)
                     }
                 }
             }
+        } header: {
+            Text("Claude")
+        } footer: {
+            Text("Import from a browser signed in to claude.ai, or paste a session.")
         }
-        .padding()
-        .background(.quaternary.opacity(0.3))
-        .clipShape(RoundedRectangle(cornerRadius: 8))
     }
 
-    // MARK: - Refresh Interval Section
+    private var popoverSection: some View {
+        Section {
+            Toggle("Show Codex usage", isOn: $appModel.settings.isCodexUsageShown)
+            Toggle("Show weekly Sonnet", isOn: $appModel.settings.isSonnetUsageShown)
+            Toggle("Show exact reset times", isOn: $appModel.settings.isResetTimeShown)
+        } header: {
+            Text("Popover")
+        } footer: {
+            Text("Codex reads usage from the signed-in Codex app. Sonnet is Claude-only.")
+        }
+    }
 
-    private var refreshIntervalSection: some View {
-        HStack {
-            VStack(alignment: .leading, spacing: 4) {
-                Text("Refresh Interval")
-                    .font(.subheadline)
-                Text("How often to check your usage data")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-            }
-
-            Spacer()
-
-            Picker("", selection: $appModel.settings.refreshInterval) {
+    private var refreshSection: some View {
+        Section {
+            Picker("Refresh interval", selection: $appModel.settings.refreshInterval) {
                 Text("1 minute").tag(60.0)
                 Text("5 minutes").tag(300.0)
                 Text("10 minutes").tag(600.0)
             }
-            .pickerStyle(.menu)
-            .labelsHidden()
-            .frame(width: 120)
+        } footer: {
+            Text("How often \(AppIdentity.displayName) checks Claude and Codex.")
         }
-        .padding()
-        .background(.quaternary.opacity(0.3))
-        .clipShape(RoundedRectangle(cornerRadius: 8))
     }
 
-    // MARK: - Sonnet Usage Section
-
-    private var sonnetUsageSection: some View {
-        HStack {
-            VStack(alignment: .leading, spacing: 4) {
-                Text("Show Sonnet Usage")
-                    .font(.subheadline)
-                Text("Display weekly Sonnet usage in the menu bar popover")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
+    private var menuBarSection: some View {
+        Section {
+            Picker("Color", selection: $appModel.settings.isColoredIcon) {
+                Text("System").tag(false)
+                Text("Color").tag(true)
             }
-
-            Spacer()
-
-            Toggle("", isOn: $appModel.settings.isSonnetUsageShown)
-                .labelsHidden()
-        }
-        .padding()
-        .background(.quaternary.opacity(0.3))
-        .clipShape(RoundedRectangle(cornerRadius: 8))
-    }
-
-    // MARK: - Codex Usage Section
-
-    private var codexUsageSection: some View {
-        HStack {
-            VStack(alignment: .leading, spacing: 4) {
-                Text("Show Codex Usage")
-                    .font(.subheadline)
-                Text("Display usage from your signed-in Codex app")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-            }
-
-            Spacer()
-
-            Toggle("", isOn: $appModel.settings.isCodexUsageShown)
-                .labelsHidden()
-        }
-        .padding()
-        .background(.quaternary.opacity(0.3))
-        .clipShape(RoundedRectangle(cornerRadius: 8))
-    }
-
-    // MARK: - Reset Time Section
-
-    private var resetTimeSection: some View {
-        HStack {
-            VStack(alignment: .leading, spacing: 4) {
-                Text("Show Reset Time")
-                    .font(.subheadline)
-                Text("Display the exact time each limit resets in the menu bar popover")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-            }
-
-            Spacer()
-
-            Toggle("", isOn: $appModel.settings.isResetTimeShown)
-                .labelsHidden()
-        }
-        .padding()
-        .background(.quaternary.opacity(0.3))
-        .clipShape(RoundedRectangle(cornerRadius: 8))
-    }
-
-    // MARK: - Icon Style Section
-
-    private var iconStyleSection: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            HStack(alignment: .top) {
-                VStack(alignment: .leading, spacing: 4) {
-                    Text("Menu Bar Icon Style")
-                        .font(.subheadline)
-
-                    Text(
-                        appModel.settings.isCodexUsageShown
-                            ? IconStyle.dualBarRequiredForCodexCaption
-                            : "Choose how \(AppIdentity.displayName) appears in the menu bar"
-                    )
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-                }
-
-                Spacer()
-
-                Picker("Icon color", selection: $appModel.settings.isColoredIcon) {
-                    Text("Mono").tag(false)
-                    Text("Color").tag(true)
-                }
-                .pickerStyle(.segmented)
-                .labelsHidden()
-                .frame(width: 136)
-                .help("Mono uses the standard system menu bar tint")
-                .accessibilityLabel("Icon color mode")
-            }
+            .pickerStyle(.segmented)
+            .help("System matches the menu bar tint. Color uses green, orange, and red.")
+            .accessibilityLabel("Menu bar color")
 
             IconStylePicker(
                 selection: $appModel.settings.iconStyle,
                 isColored: appModel.settings.isColoredIcon,
                 showsCodex: appModel.settings.isCodexUsageShown
             )
-            .disabled(!IconStyle.isPickerEnabled(isCodexUsageShown: appModel.settings.isCodexUsageShown))
-            .allowsHitTesting(IconStyle.isPickerEnabled(isCodexUsageShown: appModel.settings.isCodexUsageShown))
-            .opacity(IconStyle.isPickerEnabled(isCodexUsageShown: appModel.settings.isCodexUsageShown) ? 1 : 0.5)
-            .accessibilityHint(
-                IconStyle.isPickerEnabled(isCodexUsageShown: appModel.settings.isCodexUsageShown)
-                    ? ""
-                    : IconStyle.dualBarRequiredForCodexCaption
+            .listRowInsets(EdgeInsets(top: 8, leading: 12, bottom: 8, trailing: 12))
+        } header: {
+            Text("Menu Bar")
+        } footer: {
+            Text(
+                appModel.settings.isCodexUsageShown
+                    ? IconStyle.dualBarRequiredForCodexCaption
+                    : "Choose how \(AppIdentity.displayName) appears in the menu bar."
             )
         }
-        .padding()
-        .background(.quaternary.opacity(0.3))
-        .clipShape(RoundedRectangle(cornerRadius: 8))
     }
 
-    // MARK: - Launch at Login Section
-
-    private var launchAtLoginSection: some View {
-        HStack {
-            VStack(alignment: .leading, spacing: 4) {
-                Text("Start at Login")
-                    .font(.subheadline)
-                Text("Automatically launch \(AppIdentity.displayName) when you log in")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-            }
-
-            Spacer()
-
-            Toggle("", isOn: $launchAtLogin)
-                .labelsHidden()
+    private var loginSection: some View {
+        Section {
+            Toggle("Start at login", isOn: $launchAtLogin)
         }
-        .padding()
-        .background(.quaternary.opacity(0.3))
-        .clipShape(RoundedRectangle(cornerRadius: 8))
     }
 
     // MARK: - Notifications Tab
 
     private var notificationsTab: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            enableNotificationsSection
-            thresholdsSection
-                .opacity(appModel.settings.hasNotificationsEnabled ? 1 : 0.5)
-                .allowsHitTesting(appModel.settings.hasNotificationsEnabled)
-            resetNotificationSection
-                .opacity(appModel.settings.hasNotificationsEnabled ? 1 : 0.5)
-                .allowsHitTesting(appModel.settings.hasNotificationsEnabled)
-            testNotificationSection
-                .opacity(appModel.settings.hasNotificationsEnabled ? 1 : 0.5)
-                .allowsHitTesting(appModel.settings.hasNotificationsEnabled)
-        }
-        .padding(24)
-    }
+        Form {
+            Section {
+                Toggle("Enable notifications", isOn: $appModel.settings.hasNotificationsEnabled)
 
-    private var enableNotificationsSection: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            HStack {
-                VStack(alignment: .leading, spacing: 4) {
-                    Text("Enable Notifications")
-                        .font(.subheadline)
-                    Text("Get notified when Claude session usage thresholds are reached")
+                if let error = notificationError {
+                    HStack(alignment: .top, spacing: 6) {
+                        Image(systemName: "exclamationmark.triangle.fill")
+                            .foregroundStyle(Color(nsColor: .systemOrange))
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text(error)
+                            Button("Open System Settings") {
+                                openSystemNotificationSettings()
+                            }
+                            .buttonStyle(.link)
+                        }
                         .font(.caption)
-                        .foregroundStyle(.secondary)
-                }
-
-                Spacer()
-
-                Toggle("", isOn: $appModel.settings.hasNotificationsEnabled)
-                    .labelsHidden()
-            }
-
-            if let error = notificationError {
-                HStack(spacing: 6) {
-                    Image(systemName: "exclamationmark.triangle.fill")
-                        .foregroundStyle(.orange)
-                    Text(error)
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-
-                    Button("Open Settings") {
-                        openSystemNotificationSettings()
                     }
-                    .buttonStyle(.link)
-                    .font(.caption)
                 }
+            } footer: {
+                Text("Alerts cover Claude session usage. Codex is not included.")
             }
-        }
-        .padding()
-        .background(.quaternary.opacity(0.3))
-        .clipShape(RoundedRectangle(cornerRadius: 8))
-    }
 
-    private var thresholdsSection: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            VStack(alignment: .leading, spacing: 8) {
+            Section {
+                VStack(alignment: .leading, spacing: 8) {
+                    HStack {
+                        Text("Warning")
+                        Spacer()
+                        Text("\(Int(warningThresholdValue))%")
+                            .foregroundStyle(Color(nsColor: .systemOrange))
+                            .font(.body.monospacedDigit())
+                    }
+
+                    Slider(
+                        value: warningThresholdBinding,
+                        in: Constants.Thresholds.Notification.warningMin...Constants.Thresholds.Notification.warningMax,
+                        step: Constants.Thresholds.Notification.step
+                    )
+                    .tint(Color(nsColor: .systemOrange))
+                    .disabled(!appModel.settings.hasNotificationsEnabled)
+                }
+
+                VStack(alignment: .leading, spacing: 8) {
+                    HStack {
+                        Text("Critical")
+                        Spacer()
+                        Text("\(Int(criticalThresholdValue))%")
+                            .foregroundStyle(Color(nsColor: .systemRed))
+                            .font(.body.monospacedDigit())
+                    }
+
+                    Slider(
+                        value: criticalThresholdBinding,
+                        in: Constants.Thresholds.Notification.criticalMin...Constants.Thresholds.Notification.criticalMax,
+                        step: Constants.Thresholds.Notification.step
+                    )
+                    .tint(Color(nsColor: .systemRed))
+                    .disabled(!appModel.settings.hasNotificationsEnabled)
+
+                    if criticalThresholdValue <= warningThresholdValue {
+                        Text("Critical must be higher than warning.")
+                            .font(.caption)
+                            .foregroundStyle(Color(nsColor: .systemRed))
+                    }
+                }
+            } header: {
+                Text("Claude Session Thresholds")
+            } footer: {
+                Text("The menu bar turns orange at 50% and red at 80%, independent of these alerts.")
+            }
+            .opacity(appModel.settings.hasNotificationsEnabled ? 1 : 0.5)
+
+            Section {
+                Toggle("Notify when a session resets", isOn: isNotifiedOnResetBinding)
+                    .disabled(!appModel.settings.hasNotificationsEnabled)
+            }
+            .opacity(appModel.settings.hasNotificationsEnabled ? 1 : 0.5)
+
+            Section {
                 HStack {
-                    Text("Warning Threshold")
-                        .font(.subheadline)
-                    Spacer()
-                    Text("\(Int(warningThresholdValue))%")
-                        .foregroundStyle(.orange)
-                        .font(.subheadline.monospacedDigit())
-                }
+                    Button("Send Test Notification") {
+                        Task {
+                            await sendTestNotification()
+                        }
+                    }
+                    .disabled(isSendingTestNotification || !appModel.settings.hasNotificationsEnabled)
 
-                Slider(
-                    value: warningThresholdBinding,
-                    in: Constants.Thresholds.Notification.warningMin...Constants.Thresholds.Notification.warningMax,
-                    step: Constants.Thresholds.Notification.step
-                )
-                .tint(.orange)
+                    if isSendingTestNotification {
+                        ProgressView()
+                            .controlSize(.small)
+                    }
 
-                Text("Get notified when session usage reaches this percentage")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-            }
+                    if let message = testNotificationMessage {
+                        Text(message)
+                            .font(.caption)
+                            .foregroundStyle(hasTestNotificationSucceeded ? Color(nsColor: .systemGreen) : Color(nsColor: .systemRed))
+                    }
 
-            Divider()
-                .padding(.vertical, 4)
-
-            VStack(alignment: .leading, spacing: 8) {
-                HStack {
-                    Text("Critical Threshold")
-                        .font(.subheadline)
-                    Spacer()
-                    Text("\(Int(criticalThresholdValue))%")
-                        .foregroundStyle(.red)
-                        .font(.subheadline.monospacedDigit())
-                }
-
-                Slider(
-                    value: criticalThresholdBinding,
-                    in: Constants.Thresholds.Notification.criticalMin...Constants.Thresholds.Notification.criticalMax,
-                    step: Constants.Thresholds.Notification.step
-                )
-                .tint(.red)
-
-                Text("Get urgent notification when session usage reaches this percentage")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-
-                if criticalThresholdValue <= warningThresholdValue {
-                    Label("Critical threshold must be higher than warning", systemImage: "exclamationmark.triangle")
-                        .font(.caption)
-                        .foregroundStyle(.red)
+                    Spacer(minLength: 0)
                 }
             }
+            .opacity(appModel.settings.hasNotificationsEnabled ? 1 : 0.5)
         }
-        .padding()
-        .background(.quaternary.opacity(0.3))
-        .clipShape(RoundedRectangle(cornerRadius: 8))
-    }
-
-    private var resetNotificationSection: some View {
-        HStack {
-            VStack(alignment: .leading, spacing: 4) {
-                Text("Notify on Session Reset")
-                    .font(.subheadline)
-                Text("Get notified when your usage limit resets")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-            }
-
-            Spacer()
-
-            Toggle("", isOn: isNotifiedOnResetBinding)
-                .labelsHidden()
-        }
-        .padding()
-        .background(.quaternary.opacity(0.3))
-        .clipShape(RoundedRectangle(cornerRadius: 8))
-    }
-
-    private var testNotificationSection: some View {
-        HStack {
-            Button("Send Test Notification") {
-                Task {
-                    await sendTestNotification()
-                }
-            }
-            .controlSize(.small)
-            .disabled(isSendingTestNotification)
-
-            if isSendingTestNotification {
-                ProgressView()
-                    .controlSize(.small)
-            }
-
-            if let message = testNotificationMessage {
-                Label(message, systemImage: hasTestNotificationSucceeded ? "checkmark.circle.fill" : "xmark.circle.fill")
-                    .font(.caption)
-                    .foregroundStyle(hasTestNotificationSucceeded ? .green : .red)
-            }
-
-            Spacer()
-        }
-        .padding()
-        .background(.quaternary.opacity(0.3))
-        .clipShape(RoundedRectangle(cornerRadius: 8))
+        .formStyle(.grouped)
+        .frame(minHeight: 520, alignment: .top)
     }
 
     // MARK: - Bindings
@@ -548,24 +355,24 @@ struct SettingsView: View {
     // MARK: - About Tab
 
     private var aboutTab: some View {
-        VStack(spacing: 24) {
-            // App Icon
-            if let appIconImage = NSImage(named: "AppIcon") {
-                Image(nsImage: appIconImage)
-                    .resizable()
-                    .frame(width: 128, height: 128)
-                    .cornerRadius(22)
-                    .shadow(color: .black.opacity(0.2), radius: 10, x: 0, y: 5)
-            } else {
-                Image(systemName: "chart.bar.fill")
-                    .font(.system(size: 80))
-                    .foregroundStyle(.blue)
+        VStack(spacing: 16) {
+            Group {
+                if let appIconImage = NSImage(named: "AppIcon") {
+                    Image(nsImage: appIconImage)
+                        .resizable()
+                        .frame(width: 80, height: 80)
+                        .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
+                } else {
+                    Image(systemName: "chart.bar.xaxis")
+                        .font(.system(size: 36))
+                        .foregroundStyle(.secondary)
+                        .frame(width: 80, height: 80)
+                }
             }
 
-            // App Name & Version
-            VStack(spacing: 8) {
+            VStack(spacing: 4) {
                 Text(AppIdentity.displayName)
-                    .font(.system(size: 28, weight: .semibold))
+                    .font(.title2.weight(.semibold))
 
                 if let version = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String,
                    let build = Bundle.main.infoDictionary?["CFBundleVersion"] as? String {
@@ -575,35 +382,24 @@ struct SettingsView: View {
                 }
             }
 
-            // Copyright
-            VStack(spacing: 4) {
+            Text(AppIdentity.tagline)
+                .font(.callout)
+                .foregroundStyle(.secondary)
+                .multilineTextAlignment(.center)
+
+            Link("GitHub", destination: AppIdentity.githubURL)
+                .font(.callout)
+
+            VStack(spacing: 2) {
                 Text(AppIdentity.copyrightLine)
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-
                 Text(AppIdentity.forkAttribution)
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-
-                Text(AppIdentity.tagline)
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
             }
-
-            // Project Link
-            Link(destination: AppIdentity.githubURL) {
-                HStack {
-                    Image(systemName: "link.circle.fill")
-                    Text("View Project on GitHub")
-                }
-                .frame(maxWidth: 280)
-                .padding(.vertical, 10)
-            }
-            .buttonStyle(.bordered)
-            .controlSize(.large)
+            .font(.caption)
+            .foregroundStyle(.tertiary)
+            .multilineTextAlignment(.center)
         }
-        .padding(24)
-        .frame(maxWidth: .infinity)
+        .padding(32)
+        .frame(maxWidth: .infinity, minHeight: 520)
     }
 
     // MARK: - Actions
@@ -623,7 +419,7 @@ struct SettingsView: View {
     private func updateNotificationStatus() async {
         let hasPermission = await appModel.checkNotificationPermissions()
         if !hasPermission {
-            notificationError = "Notifications disabled in System Settings"
+            notificationError = "Notifications are turned off in System Settings."
             if appModel.settings.hasNotificationsEnabled {
                 appModel.settings.hasNotificationsEnabled = false
             }
@@ -635,7 +431,7 @@ struct SettingsView: View {
     @MainActor
     private func validateAndSaveSessionKey() async {
         guard !sessionKey.isEmpty else {
-            sessionKeyValidationMessage = "Session key cannot be empty"
+            sessionKeyValidationMessage = "Enter a Claude session."
             hasSessionKeyValidationSucceeded = false
             return
         }
@@ -649,7 +445,7 @@ struct SettingsView: View {
             let isValid = try await appModel.validateAndSaveSessionKey(sessionKey)
 
             if isValid {
-                sessionKeyValidationMessage = "Session key saved"
+                sessionKeyValidationMessage = "Saved"
                 hasSessionKeyValidationSucceeded = true
 
                 Task { @MainActor in
@@ -658,7 +454,7 @@ struct SettingsView: View {
                     hasSessionKeyValidationSucceeded = false
                 }
             } else {
-                sessionKeyValidationMessage = "Session key validation failed"
+                sessionKeyValidationMessage = "Claude rejected this session."
                 hasSessionKeyValidationSucceeded = false
             }
         } catch let error as SessionKeyError {
@@ -666,7 +462,7 @@ struct SettingsView: View {
             offersFullDiskAccessSettings = false
             hasSessionKeyValidationSucceeded = false
         } catch {
-            sessionKeyValidationMessage = "Validation failed: \(error.localizedDescription)"
+            sessionKeyValidationMessage = error.localizedDescription
             offersFullDiskAccessSettings = false
             hasSessionKeyValidationSucceeded = false
         }
@@ -716,7 +512,7 @@ struct SettingsView: View {
                 offersFullDiskAccessSettings = false
                 hasSessionKeyValidationSucceeded = false
             } catch {
-                sessionKeyValidationMessage = "Failed to clear: \(error.localizedDescription)"
+                sessionKeyValidationMessage = error.localizedDescription
                 offersFullDiskAccessSettings = false
                 hasSessionKeyValidationSucceeded = false
             }
@@ -731,7 +527,6 @@ struct SettingsView: View {
                 try SMAppService.mainApp.unregister()
             }
         } catch {
-            // Revert the toggle if it failed
             launchAtLogin = SMAppService.mainApp.status == .enabled
         }
     }
@@ -755,20 +550,18 @@ struct SettingsView: View {
                 }
             }
 
-            // Send test notification
             try await appModel.sendTestNotification()
 
-            testNotificationMessage = "Test notification sent!"
+            testNotificationMessage = "Sent"
             hasTestNotificationSucceeded = true
 
-            // Clear message after 2 seconds
             Task { @MainActor in
                 try? await Task.sleep(for: .seconds(2))
                 testNotificationMessage = nil
                 hasTestNotificationSucceeded = false
             }
         } catch {
-            testNotificationMessage = "Failed: \(error.localizedDescription)"
+            testNotificationMessage = error.localizedDescription
             hasTestNotificationSucceeded = false
         }
 

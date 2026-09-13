@@ -23,7 +23,7 @@ struct SegmentedBarIcon: View {
             if isLoading {
                 Image(systemName: "arrow.clockwise")
                     .font(.system(size: 11, weight: .medium))
-                    .foregroundColor(statusColor)
+                    .foregroundStyle(statusColor)
             } else {
                 HStack(spacing: segmentSpacing) {
                     ForEach(0..<segmentCount, id: \.self) { index in
@@ -31,7 +31,7 @@ struct SegmentedBarIcon: View {
                         let isActive = percentage >= threshold - (100.0 / Double(segmentCount))
 
                         RoundedRectangle(cornerRadius: 1)
-                            .fill(isActive ? segmentColor(for: index) : Color.gray.opacity(0.3))
+                            .fill(isActive ? statusColor : Color.gray.opacity(0.3))
                             .frame(width: segmentWidth, height: segmentHeight(for: index))
                     }
                 }
@@ -41,7 +41,7 @@ struct SegmentedBarIcon: View {
             if isStale && !isLoading {
                 Image(systemName: "exclamationmark.triangle.fill")
                     .font(.system(size: 8))
-                    .foregroundColor(.gray)
+                    .foregroundStyle(.gray)
             }
         }
         .frame(height: 22)
@@ -54,22 +54,6 @@ struct SegmentedBarIcon: View {
         let baseHeight: CGFloat = 6
         let increment: CGFloat = 2
         return baseHeight + (CGFloat(index) * increment)
-    }
-
-    private func segmentColor(for index: Int) -> Color {
-        if isStale {
-            return .gray
-        }
-        // Color segments by position to create a gradient effect (green → orange → red)
-        // Uses Constants.Thresholds.Status for consistent color boundaries
-        let segmentPercentage = Double(index + 1) / Double(segmentCount) * 100
-        if segmentPercentage <= Constants.Thresholds.Status.warningStart {
-            return .green
-        } else if segmentPercentage <= Constants.Thresholds.Status.criticalStart {
-            return .orange
-        } else {
-            return .red
-        }
     }
 
     private var statusColor: Color {

@@ -20,19 +20,19 @@ enum AppError: LocalizedError {
     var errorDescription: String? {
         switch self {
         case .noSessionKey:
-            return "No session key found. Please complete setup."
+            return "Add a Claude session to start tracking."
         case .networkError(let error):
             return error.localizedDescription
         case .keychainError(let error):
             return error.localizedDescription
         case .sessionKeyInvalid:
-            return "Session key is invalid or expired. Please update in settings."
+            return "Claude session expired. Update it in Settings."
         case .apiResponseInvalid:
-            return "Unable to parse usage data from server."
+            return "Couldn't read usage data. Try refreshing."
         case .organizationNotFound:
-            return "No organizations found for this account."
+            return "No Claude organizations found for this account."
         case .cacheCorrupted:
-            return "Cached data is corrupted. Fetching fresh data..."
+            return "Cached data was unreadable. Fetching a fresh copy…"
         }
     }
 

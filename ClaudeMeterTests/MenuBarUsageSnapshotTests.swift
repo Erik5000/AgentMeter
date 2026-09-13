@@ -19,7 +19,14 @@ final class MenuBarUsageSnapshotTests: XCTestCase {
         XCTAssertFalse(snapshot.showsCodex)
         XCTAssertNil(snapshot.codexSession)
         XCTAssertNil(snapshot.codexWeekly)
-        XCTAssertEqual(snapshot.tooltip, "Claude 62%, Claude session 1%, Claude weekly 62%")
+        XCTAssertEqual(
+            snapshot.tooltip,
+            """
+            Claude
+            Session 1%
+            Week 62%
+            """
+        )
     }
 
     func test_withCodex_displaysTheHighestOfAllFourLimits() {
@@ -43,7 +50,14 @@ final class MenuBarUsageSnapshotTests: XCTestCase {
         XCTAssertEqual(snapshot.codexWeekly, 24)
         XCTAssertEqual(
             snapshot.tooltip,
-            "Claude 62%, Codex 24%, Claude session 1%, Claude weekly 62%, Codex session 13%, Codex weekly 24%"
+            """
+            Claude
+            Session 1%
+            Week 62%
+            Codex
+            Session 13%
+            Week 24%
+            """
         )
     }
 
@@ -78,7 +92,7 @@ final class MenuBarUsageSnapshotTests: XCTestCase {
         XCTAssertEqual(snapshot.displayedPercentage, 40)
         XCTAssertEqual(snapshot.status, .safe)
         XCTAssertFalse(snapshot.tooltip.contains("Codex 0%"))
-        XCTAssertTrue(snapshot.tooltip.contains("Codex unavailable"))
+        XCTAssertTrue(snapshot.tooltip.contains("Codex\nCan't load"))
     }
 
     func test_withoutClaudeData_doesNotTreatMissingClaudeAsZeroPercent() {
@@ -95,7 +109,7 @@ final class MenuBarUsageSnapshotTests: XCTestCase {
         XCTAssertNil(snapshot.claudeWeekly)
         XCTAssertEqual(snapshot.codexSession, 55)
         XCTAssertFalse(snapshot.tooltip.contains("Claude 0%"))
-        XCTAssertTrue(snapshot.tooltip.contains("Claude unavailable"))
+        XCTAssertTrue(snapshot.tooltip.contains("Claude\nCan't load"))
     }
 
     func test_isStale_whenOnlyCodexDataIsOlderThanThreshold() {

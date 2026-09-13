@@ -42,9 +42,13 @@ enum IconStyle: String, Codable, CaseIterable, Identifiable, Sendable {
         }
     }
 
-    /// Icon style is forced to Dual Bar while Codex usage is shown, so the picker is inert.
+    /// Icon style is forced to Dual Bar while Codex usage is shown, so other styles cannot be chosen.
     static func isPickerEnabled(isCodexUsageShown: Bool) -> Bool {
         !isCodexUsageShown
+    }
+
+    static func isSelectable(_ style: IconStyle, isCodexUsageShown: Bool) -> Bool {
+        !isCodexUsageShown || style == .dualBar
     }
 
     static func resolved(selected: IconStyle, showsCodex: Bool) -> IconStyle {
@@ -52,5 +56,5 @@ enum IconStyle: String, Codable, CaseIterable, Identifiable, Sendable {
     }
 
     static let dualBarRequiredForCodexCaption =
-        "Dual Bar is used while Codex usage is on so Claude and Codex can be shown together."
+        "Dual Bar is required while Codex is shown so Claude and Codex stay side by side."
 }

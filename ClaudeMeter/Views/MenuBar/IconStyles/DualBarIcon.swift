@@ -22,16 +22,16 @@ struct DualBarIcon: View {
     var codexWeekly: Double? = nil
 
     private let singleBarWidth: CGFloat = 32
-    private let pairedBarWidth: CGFloat = 16
+    private let pairedBarWidth: CGFloat = 18
     private let barHeight: CGFloat = 5
-    private let barSpacing: CGFloat = 2
+    private let barSpacing: CGFloat = 3
 
     var body: some View {
         HStack(spacing: 4) {
             if isLoading {
                 Image(systemName: "arrow.clockwise")
                     .font(.system(size: 11, weight: .medium))
-                    .foregroundColor(statusColor)
+                    .foregroundStyle(statusColor)
             } else if showsCodex {
                 VStack(alignment: .leading, spacing: barSpacing) {
                     metricRow(claude: claudeSession, codex: codexSession)
@@ -41,28 +41,26 @@ struct DualBarIcon: View {
                 VStack(spacing: barSpacing) {
                     ProgressBar(
                         percentage: sessionBarValue,
-                        color: barColor(for: sessionBarValue),
-                        isStale: isStale
+                        color: barColor(for: sessionBarValue)
                     )
                     .frame(width: singleBarWidth, height: barHeight)
 
                     ProgressBar(
                         percentage: weeklyBarValue,
-                        color: isStale ? .gray : .purple,
-                        isStale: isStale
+                        color: barColor(for: weeklyBarValue)
                     )
                     .frame(width: singleBarWidth, height: barHeight)
                 }
 
                 Text("\(Int(percentage))%")
                     .font(.system(size: 10, weight: .medium, design: .monospaced))
-                    .foregroundColor(statusColor)
+                    .foregroundStyle(statusColor)
             }
 
             if isStale && !isLoading {
                 Image(systemName: "exclamationmark.triangle.fill")
                     .font(.system(size: 8))
-                    .foregroundColor(.gray)
+                    .foregroundStyle(.gray)
             }
         }
         .frame(height: 22)
@@ -72,39 +70,37 @@ struct DualBarIcon: View {
     }
 
     private func metricRow(claude: Double?, codex: Double?) -> some View {
-        HStack(spacing: 3) {
+        HStack(spacing: 7) {
+            providerMeter(claude)
+            providerMeter(codex)
+        }
+    }
+
+    private func providerMeter(_ value: Double?) -> some View {
+        HStack(spacing: 2) {
             ProgressBar(
-                percentage: claude ?? 0,
-                color: barColor(for: claude),
-                isStale: isStale
+                percentage: value ?? 0,
+                color: barColor(for: value)
             )
             .frame(width: pairedBarWidth, height: barHeight)
 
-            compactPercent(claude)
-
-            ProgressBar(
-                percentage: codex ?? 0,
-                color: barColor(for: codex),
-                isStale: isStale
-            )
-            .frame(width: pairedBarWidth, height: barHeight)
-
-            compactPercent(codex)
+            compactPercent(value)
         }
     }
 
     private func compactPercent(_ value: Double?) -> some View {
         Group {
             if let value {
-                Text("\(Int(value))%")
-                    .foregroundColor(isStale ? .gray : UsageStatus.forPercentage(value).color)
+                Text("\(Int(value))")
+                    .foregroundStyle(isStale ? Color.gray : UsageStatus.forPercentage(value).color)
             } else {
-                Text("—")
-                    .foregroundColor(.gray)
+                Text("–")
+                    .foregroundStyle(.gray)
             }
         }
-        .font(.system(size: 8, weight: .medium, design: .monospaced))
-        .frame(minWidth: 22, alignment: .leading)
+        .font(.system(size: 9, weight: .semibold, design: .monospaced))
+        .monospacedDigit()
+        .frame(minWidth: 16, alignment: .leading)
     }
 
     private var statusColor: Color {
@@ -130,7 +126,7 @@ struct DualBarIcon: View {
         if showsCodex {
             return "Claude session \(percentLabel(claudeSession)), Codex session \(percentLabel(codexSession)), Claude weekly \(percentLabel(claudeWeekly)), Codex weekly \(percentLabel(codexWeekly))"
         }
-        return "Session \(Int(sessionBarValue)) percent, weekly \(Int(weeklyBarValue)) percent, showing \(Int(percentage)) percent"
+        return "Session \(Int(sessionBarValue)) percent, weekly \(Int(weeklyBarValue)) percent"
     }
 
     private func percentLabel(_ value: Double?) -> String {
@@ -143,15 +139,14 @@ struct DualBarIcon: View {
 private struct ProgressBar: View {
     let percentage: Double
     let color: Color
-    let isStale: Bool
 
     var body: some View {
         GeometryReader { geo in
             ZStack(alignment: .leading) {
-                RoundedRectangle(cornerRadius: 1.5)
+                Capsule()
                     .fill(Color.gray.opacity(0.3))
 
-                RoundedRectangle(cornerRadius: 1.5)
+                Capsule()
                     .fill(color)
                     .frame(width: geo.size.width * min(max(percentage, 0) / 100, 1.0))
             }

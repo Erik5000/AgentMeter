@@ -36,15 +36,8 @@ extension UsageData {
     }
 
     /// Human-readable staleness indicator
-    var freshnessDescription: String {
-        let elapsed = Date().timeIntervalSince(lastUpdated)
-        if elapsed < 60 {
-            return "just now"
-        } else if elapsed < 3600 {
-            return "\(Int(elapsed / 60)) minutes ago"
-        } else {
-            return "\(Int(elapsed / 3600)) hours ago"
-        }
+    func freshnessDescription(now: Date = Date()) -> String {
+        RelativeTimestamp.age(since: lastUpdated, now: now)
     }
 
     var isStale: Bool {

@@ -11,102 +11,58 @@ import SwiftUI
 struct UsageCardView: View {
     let title: String
     let usageLimit: UsageLimit
-    let icon: String
     let windowDuration: TimeInterval?
 
-    /// Whether to append the exact reset time in parentheses.
+    /// Whether to append the exact reset time.
     var showsExactResetTime: Bool = true
 
     /// When true, the exact reset time shows the time of day only (no date).
     var usesTimeOnlyResetTimestamp: Bool = false
 
-    /// Exact reset time string, time-only or date+time depending on the card.
-    private var exactResetTime: String {
-        usesTimeOnlyResetTimestamp ? usageLimit.resetTimeOnlyFormatted : usageLimit.resetTimeFormatted
+    private var resetLabel: String {
+        usageLimit.resetCaption(
+            showsExactTime: showsExactResetTime,
+            usesTimeOnly: usesTimeOnlyResetTimestamp,
+            compact: false
+        )
     }
 
-    /// Reset label, optionally with the exact time appended in parentheses.
-    private var resetLabel: String {
-        showsExactResetTime
-            ? "Resets \(usageLimit.resetDescription) (\(exactResetTime))"
-            : "Resets \(usageLimit.resetDescription)"
+    private var isAtRisk: Bool {
+        guard let windowDuration else { return false }
+        return usageLimit.isAtRisk(windowDuration: windowDuration)
     }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            // Header with icon and title
-            HStack(spacing: 8) {
-                Image(systemName: icon)
-                    .font(.title3)
-                    .foregroundColor(usageLimit.status.color)
+        VStack(alignment: .leading, spacing: 8) {
+            Text(title)
+                .font(.subheadline.weight(.semibold))
+                .foregroundStyle(.primary)
 
-                Text(title)
-                    .font(.headline)
-                    .foregroundColor(.primary)
+            HStack(alignment: .firstTextBaseline, spacing: 8) {
+                Text("\(Int(usageLimit.percentage))%")
+                    .font(.system(size: 28, weight: .semibold, design: .rounded))
+                    .monospacedDigit()
+                    .foregroundStyle(usageLimit.status.color)
 
-                Spacer()
+                Spacer(minLength: 8)
 
-                // Status badge
-                HStack(spacing: 4) {
-                    Image(systemName: usageLimit.status.iconName)
-                        .font(.caption)
-                    Text(usageLimit.status.rawValue.capitalized)
-                        .font(.caption)
-                        .fontWeight(.medium)
-                }
-                .foregroundColor(usageLimit.status.color)
-                .padding(.horizontal, 8)
-                .padding(.vertical, 4)
-                .background(usageLimit.status.color.opacity(0.15))
-                .cornerRadius(8)
-            }
-
-            // Usage percentage
-            Text("\(Int(usageLimit.percentage))%")
-                .font(.system(size: 36, weight: .bold, design: .rounded))
-                .foregroundColor(usageLimit.status.color)
-
-            // Progress bar
-            GeometryReader { geometry in
-                ZStack(alignment: .leading) {
-                    // Background
-                    RoundedRectangle(cornerRadius: 4)
-                        .fill(Color.gray.opacity(0.2))
-
-                    // Progress
-                    RoundedRectangle(cornerRadius: 4)
-                        .fill(usageLimit.status.color)
-                        .frame(width: geometry.size.width * min(usageLimit.percentage / 100, 1.0))
+                if isAtRisk {
+                    UsagePacingIndicator()
                 }
             }
-            .frame(height: 8)
 
-            // Reset time and pacing indicator
-            HStack(spacing: 4) {
-                HStack(spacing: 4) {
-                    Image(systemName: "clock")
-                        .font(.caption)
-                    Text(resetLabel)
-                        .font(.caption)
-                }
+            UsageMeterProgressBar(
+                percentage: usageLimit.percentage,
+                color: usageLimit.status.color
+            )
+
+            Text(resetLabel)
+                .font(.caption)
+                .foregroundStyle(.secondary)
                 .help(usageLimit.resetTimeFormatted)
-
-                Spacer()
-
-                if let windowDuration,
-                   usageLimit.isAtRisk(windowDuration: windowDuration) {
-                    Image(systemName: "flame.fill")
-                        .font(.caption)
-                        .foregroundColor(.orange)
-                        .help("You may hit your limit before it resets")
-                        .accessibilityLabel("At risk of hitting limit")
-                }
-            }
-            .foregroundColor(.secondary)
         }
-        .padding(16)
-        .background(Color(nsColor: .controlBackgroundColor))
-        .cornerRadius(12)
+        .padding(14)
+        .background(.quaternary.opacity(0.35), in: RoundedRectangle(cornerRadius: 10, style: .continuous))
         .accessibilityElement(children: .combine)
         .accessibilityLabel("\(title): \(Int(usageLimit.percentage))% used, \(usageLimit.status.accessibilityDescription)")
         .accessibilityValue(resetLabel)
@@ -116,14 +72,13 @@ struct UsageCardView: View {
 // MARK: - Preview
 
 #Preview {
-    VStack(spacing: 16) {
+    VStack(spacing: 12) {
         UsageCardView(
             title: "5-Hour Session",
             usageLimit: UsageLimit(
                 utilization: 35.0,
                 resetAt: Date().addingTimeInterval(7200)
             ),
-            icon: "gauge.with.dots.needle.67percent",
             windowDuration: Constants.Pacing.sessionWindow
         )
 
@@ -133,10 +88,9 @@ struct UsageCardView: View {
                 utilization: 75.0,
                 resetAt: Date().addingTimeInterval(86400 * 3)
             ),
-            icon: "calendar",
             windowDuration: Constants.Pacing.weeklyWindow
         )
     }
     .padding()
-    .frame(width: 320)
+    .frame(width: 332)
 }

@@ -95,33 +95,46 @@ struct MenuBarUsageSnapshot: Equatable, Sendable {
         codexWeekly: Double?,
         hasCodexData: Bool
     ) -> String {
-        var parts: [String] = []
-        if let claudeDisplayedPercentage {
-            parts.append("Claude \(Int(claudeDisplayedPercentage))%")
-        } else {
-            parts.append("Claude unavailable")
-        }
+        var blocks: [String] = [
+            providerBlock(
+                name: "Claude",
+                session: claudeSession,
+                weekly: claudeWeekly,
+                hasAnyValue: claudeDisplayedPercentage != nil
+            )
+        ]
+
         if showsCodex {
-            if let codexDisplayedPercentage {
-                parts.append("Codex \(Int(codexDisplayedPercentage))%")
-            } else {
-                parts.append("Codex unavailable")
-            }
+            blocks.append(
+                providerBlock(
+                    name: "Codex",
+                    session: codexSession,
+                    weekly: codexWeekly,
+                    hasAnyValue: hasCodexData && codexDisplayedPercentage != nil
+                )
+            )
         }
-        if let claudeSession, let claudeWeekly {
-            parts.append("Claude session \(Int(claudeSession))%")
-            parts.append("Claude weekly \(Int(claudeWeekly))%")
+
+        return blocks.joined(separator: "\n")
+    }
+
+    private static func providerBlock(
+        name: String,
+        session: Double?,
+        weekly: Double?,
+        hasAnyValue: Bool
+    ) -> String {
+        var lines = [name]
+        if !hasAnyValue {
+            lines.append("Can't load")
+            return lines.joined(separator: "\n")
         }
-        if showsCodex, hasCodexData {
-            if let codexSession {
-                parts.append("Codex session \(Int(codexSession))%")
-            }
-            if let codexWeekly {
-                parts.append("Codex weekly \(Int(codexWeekly))%")
-            } else {
-                parts.append("Codex weekly unavailable")
-            }
+        if let session {
+            lines.append("Session \(Int(session))%")
         }
-        return parts.joined(separator: ", ")
+        if let weekly {
+            lines.append("Week \(Int(weekly))%")
+        }
+        return lines.joined(separator: "\n")
     }
 }

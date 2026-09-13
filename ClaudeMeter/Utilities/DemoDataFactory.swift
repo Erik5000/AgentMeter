@@ -76,7 +76,7 @@ enum DemoDataFactory {
             appModel.applyDemoState(
                 usageData: makeUsageData(sessionPercentage: 55, weeklyPercentage: 30),
                 isSetupComplete: true,
-                errorMessage: "Unable to connect to Claude.ai. Check your internet connection.",
+                errorMessage: "No internet connection.",
                 isLoading: false
             )
 
