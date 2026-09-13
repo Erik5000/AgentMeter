@@ -8,111 +8,129 @@
 import Foundation
 import Security
 
-/// Actor-isolated repository for secure Keychain operations
+/// Actor-isolated repository for secure Keychain operations.
+///
+/// Session keys are stored in the data-protection keychain so macOS does not
+/// show the file-based login-keychain ACL prompt on every read.
 actor KeychainRepository: KeychainRepositoryProtocol {
-    private let serviceName = AppIdentity.keychainService
-    private let accessGroup = AppIdentity.keychainAccessGroup
+    private let secItem: any SecItemClient
+    private let serviceName: String
+    private let legacyServices: [String]
+    private var cachedSessionKeys: [String: String] = [:]
 
-    /// Save session key to Keychain with security attributes
+    init(
+        secItem: any SecItemClient = SystemSecItemClient(),
+        serviceName: String = AppIdentity.keychainService,
+        legacyServices: [String] = AppIdentity.legacyKeychainServices
+    ) {
+        self.secItem = secItem
+        self.serviceName = serviceName
+        self.legacyServices = legacyServices
+    }
+
     func save(sessionKey: String, account: String) async throws {
+        try persistModern(sessionKey: sessionKey, account: account)
+        cachedSessionKeys[account] = sessionKey
+        deleteSilently(account: account, service: serviceName, dataProtection: false)
+    }
+
+    func retrieve(account: String) async throws -> String {
+        if let cached = cachedSessionKeys[account] {
+            return cached
+        }
+
+        if let value = copyString(account: account, service: serviceName, dataProtection: true) {
+            cachedSessionKeys[account] = value
+            return value
+        }
+
+        if let value = copyString(account: account, service: serviceName, dataProtection: false) {
+            try? persistModern(sessionKey: value, account: account)
+            deleteSilently(account: account, service: serviceName, dataProtection: false)
+            cachedSessionKeys[account] = value
+            return value
+        }
+
+        for service in legacyServices {
+            let value = copyString(account: account, service: service, dataProtection: false)
+                ?? copyString(account: account, service: service, dataProtection: true)
+            if let value {
+                try? persistModern(sessionKey: value, account: account)
+                cachedSessionKeys[account] = value
+                return value
+            }
+        }
+
+        throw KeychainError.notFound
+    }
+
+    func update(sessionKey: String, account: String) async throws {
+        try persistModern(sessionKey: sessionKey, account: account)
+        cachedSessionKeys[account] = sessionKey
+        deleteSilently(account: account, service: serviceName, dataProtection: false)
+    }
+
+    func delete(account: String) async throws {
+        cachedSessionKeys[account] = nil
+        let dataProtectionStatus = secItem.delete(
+            KeychainItemQuery.password(account: account, service: serviceName, dataProtection: true)
+        )
+        let fileBasedStatus = secItem.delete(
+            KeychainItemQuery.password(account: account, service: serviceName, dataProtection: false)
+        )
+
+        let statuses = [dataProtectionStatus, fileBasedStatus]
+        guard statuses.allSatisfy({ $0 == errSecSuccess || $0 == errSecItemNotFound }) else {
+            throw KeychainError.deleteFailed(
+                OSStatus: statuses.first { $0 != errSecSuccess && $0 != errSecItemNotFound } ?? errSecUnimplemented
+            )
+        }
+    }
+
+    func exists(account: String) async -> Bool {
+        (try? await retrieve(account: account)) != nil
+    }
+
+    private func persistModern(sessionKey: String, account: String) throws {
         guard let data = sessionKey.data(using: .utf8) else {
             throw KeychainError.saveFailed(OSStatus: errSecParam)
         }
 
-        let query: [String: Any] = [
-            kSecClass as String: kSecClassGenericPassword,
-            kSecAttrAccount as String: account,
-            kSecAttrService as String: serviceName,
-            kSecValueData as String: data,
-            kSecAttrAccessible as String: kSecAttrAccessibleAfterFirstUnlock,
-            kSecAttrSynchronizable as String: kCFBooleanFalse as Any,
-            kSecAttrAccessGroup as String: accessGroup,
-        ]
-
-        let status = SecItemAdd(query as CFDictionary, nil)
-
-        if status == errSecDuplicateItem {
-            // Item already exists, update it instead
-            try await update(sessionKey: sessionKey, account: account)
-        } else if status != errSecSuccess {
-            throw KeychainError.saveFailed(OSStatus: status)
+        let addStatus = secItem.add(KeychainItemQuery.add(account: account, service: serviceName, data: data))
+        if addStatus == errSecDuplicateItem {
+            let updateStatus = secItem.update(
+                query: KeychainItemQuery.password(
+                    account: account,
+                    service: serviceName,
+                    dataProtection: true
+                ),
+                attributes: [kSecValueData as String: data]
+            )
+            guard updateStatus == errSecSuccess else {
+                throw KeychainError.updateFailed(OSStatus: updateStatus)
+            }
+        } else if addStatus != errSecSuccess {
+            throw KeychainError.saveFailed(OSStatus: addStatus)
         }
     }
 
-    /// Retrieve session key from Keychain
-    func retrieve(account: String) async throws -> String {
-        let query: [String: Any] = [
-            kSecClass as String: kSecClassGenericPassword,
-            kSecAttrAccount as String: account,
-            kSecAttrService as String: serviceName,
-            kSecReturnData as String: kCFBooleanTrue as Any,
-            kSecMatchLimit as String: kSecMatchLimitOne,
-            kSecAttrAccessGroup as String: accessGroup,
-        ]
-
-        var item: CFTypeRef?
-        let status = SecItemCopyMatching(query as CFDictionary, &item)
-
-        guard status == errSecSuccess,
-              let data = item as? Data,
-              let sessionKey = String(data: data, encoding: .utf8) else {
-            throw KeychainError.notFound
+    private func copyString(account: String, service: String, dataProtection: Bool) -> String? {
+        let query = KeychainItemQuery.lookup(
+            account: account,
+            service: service,
+            returnData: true,
+            dataProtection: dataProtection
+        )
+        let (status, data) = secItem.copyMatching(query)
+        guard status == errSecSuccess, let data, let value = String(data: data, encoding: .utf8) else {
+            return nil
         }
-
-        return sessionKey
+        return value
     }
 
-    /// Update existing session key in Keychain
-    func update(sessionKey: String, account: String) async throws {
-        guard let data = sessionKey.data(using: .utf8) else {
-            throw KeychainError.updateFailed(OSStatus: errSecParam)
-        }
-
-        let query: [String: Any] = [
-            kSecClass as String: kSecClassGenericPassword,
-            kSecAttrAccount as String: account,
-            kSecAttrService as String: serviceName,
-            kSecAttrAccessGroup as String: accessGroup,
-        ]
-
-        let attributes: [String: Any] = [
-            kSecValueData as String: data,
-        ]
-
-        let status = SecItemUpdate(query as CFDictionary, attributes as CFDictionary)
-
-        guard status == errSecSuccess else {
-            throw KeychainError.updateFailed(OSStatus: status)
-        }
-    }
-
-    /// Delete session key from Keychain
-    func delete(account: String) async throws {
-        let query: [String: Any] = [
-            kSecClass as String: kSecClassGenericPassword,
-            kSecAttrAccount as String: account,
-            kSecAttrService as String: serviceName,
-            kSecAttrAccessGroup as String: accessGroup,
-        ]
-
-        let status = SecItemDelete(query as CFDictionary)
-
-        guard status == errSecSuccess || status == errSecItemNotFound else {
-            throw KeychainError.deleteFailed(OSStatus: status)
-        }
-    }
-
-    /// Check if session key exists for account
-    func exists(account: String) async -> Bool {
-        let query: [String: Any] = [
-            kSecClass as String: kSecClassGenericPassword,
-            kSecAttrAccount as String: account,
-            kSecAttrService as String: serviceName,
-            kSecMatchLimit as String: kSecMatchLimitOne,
-            kSecAttrAccessGroup as String: accessGroup,
-        ]
-
-        let status = SecItemCopyMatching(query as CFDictionary, nil)
-        return status == errSecSuccess
+    private func deleteSilently(account: String, service: String, dataProtection: Bool) {
+        _ = secItem.delete(
+            KeychainItemQuery.password(account: account, service: service, dataProtection: dataProtection)
+        )
     }
 }

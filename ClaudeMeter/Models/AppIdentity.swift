@@ -6,7 +6,7 @@ enum AppIdentity {
     static let testBundleIdentifier = "com.erik5000.AgentMeterTests"
     static let loggerSubsystem = "com.erik5000.AgentMeter"
     static let keychainService = "com.erik5000.AgentMeter.sessionkey"
-    static let keychainAccessGroup = "$(AppIdentifierPrefix)com.erik5000.AgentMeter"
+    static let legacyKeychainServices = ["com.claudemeter.sessionkey"]
     static let appSupportDirectoryName = "com.erik5000.AgentMeter"
     static let publicExportDirectoryName = ".agentmeter"
     static let githubURL = URL(string: "https://github.com/Erik5000/AgentMeter")!
