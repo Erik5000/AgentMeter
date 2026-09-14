@@ -5,7 +5,7 @@
 set -e
 
 PROJECT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
-SCHEME="ClaudeMeter"
+SCHEME="AgentMeter"
 
 # Demo modes (from DemoMode.swift)
 MODES=(
@@ -47,12 +47,12 @@ echo ""
 # Build the app
 echo "Building $SCHEME..."
 BUILD_DIR="$PROJECT_DIR/.build"
-xcodebuild -project "$PROJECT_DIR/ClaudeMeter.xcodeproj" \
+xcodebuild -project "$PROJECT_DIR/AgentMeter.xcodeproj" \
     -scheme "$SCHEME" \
     -configuration Debug \
     -derivedDataPath "$BUILD_DIR" \
     build | xcbeautify 2>/dev/null || \
-xcodebuild -project "$PROJECT_DIR/ClaudeMeter.xcodeproj" \
+xcodebuild -project "$PROJECT_DIR/AgentMeter.xcodeproj" \
     -scheme "$SCHEME" \
     -configuration Debug \
     -derivedDataPath "$BUILD_DIR" \

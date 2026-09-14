@@ -1,5 +1,5 @@
 import XCTest
-@testable import ClaudeMeter
+@testable import AgentMeter
 
 final class RelativeTimestampTests: XCTestCase {
     func test_age_usesSingularMinute() {

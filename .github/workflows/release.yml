@@ -65,10 +65,10 @@ jobs:
 
       - name: Update version in project
         run: |
-          sed -i '' "s/MARKETING_VERSION = [^;]*/MARKETING_VERSION = ${{ steps.version.outputs.version }}/g" ClaudeMeter.xcodeproj/project.pbxproj
+          sed -i '' "s/MARKETING_VERSION = [^;]*/MARKETING_VERSION = ${{ steps.version.outputs.version }}/g" AgentMeter.xcodeproj/project.pbxproj
 
           BUILD_NUMBER=$(echo "${{ steps.version.outputs.version }}" | sed 's/[^0-9]*\([0-9]*\).*/\1/')
-          sed -i '' "s/CURRENT_PROJECT_VERSION = [^;]*/CURRENT_PROJECT_VERSION = $BUILD_NUMBER/g" ClaudeMeter.xcodeproj/project.pbxproj
+          sed -i '' "s/CURRENT_PROJECT_VERSION = [^;]*/CURRENT_PROJECT_VERSION = $BUILD_NUMBER/g" AgentMeter.xcodeproj/project.pbxproj
 
           echo "Updated version to ${{ steps.version.outputs.version }} (build $BUILD_NUMBER)"
 
@@ -112,8 +112,8 @@ jobs:
         run: |
           if [ "$SIGNED" = "true" ]; then
             xcodebuild clean build \
-              -project ClaudeMeter.xcodeproj \
-              -scheme ClaudeMeter \
+              -project AgentMeter.xcodeproj \
+              -scheme AgentMeter \
               -configuration Release \
               -derivedDataPath ./build \
               -arch x86_64 -arch arm64 \
@@ -124,8 +124,8 @@ jobs:
               OTHER_CODE_SIGN_FLAGS="--timestamp --options runtime"
           else
             xcodebuild clean build \
-              -project ClaudeMeter.xcodeproj \
-              -scheme ClaudeMeter \
+              -project AgentMeter.xcodeproj \
+              -scheme AgentMeter \
               -configuration Release \
               -derivedDataPath ./build \
               -arch x86_64 -arch arm64 \

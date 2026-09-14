@@ -1,6 +1,6 @@
 //
 //  MenuBarPopoverView.swift
-//  ClaudeMeter
+//  AgentMeter
 //
 //  Created by Edd on 2026-01-14.
 //

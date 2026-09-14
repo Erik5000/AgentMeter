@@ -1,12 +1,12 @@
 //
 //  UsageLimitRiskTests.swift
-//  ClaudeMeterTests
+//  AgentMeterTests
 //
 //  Created by Edd on 2026-01-16.
 //
 
 import XCTest
-@testable import ClaudeMeter
+@testable import AgentMeter
 
 final class UsageLimitRiskTests: XCTestCase {
 

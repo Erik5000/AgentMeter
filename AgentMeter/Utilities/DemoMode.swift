@@ -1,6 +1,6 @@
 //
 //  DemoMode.swift
-//  ClaudeMeter
+//  AgentMeter
 //
 //  Created by Edd on 2026-02-02.
 //

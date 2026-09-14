@@ -1,5 +1,5 @@
 import XCTest
-@testable import ClaudeMeter
+@testable import AgentMeter
 
 final class MenuBarUsageSnapshotTests: XCTestCase {
     func test_withoutCodex_displaysClaudeSessionAndUsesClaudeWeeklyForDualBar() {

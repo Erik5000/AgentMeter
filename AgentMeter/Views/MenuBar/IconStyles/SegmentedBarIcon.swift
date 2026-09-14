@@ -1,6 +1,6 @@
 //
 //  SegmentedBarIcon.swift
-//  ClaudeMeter
+//  AgentMeter
 //
 //  Created by Edd on 2025-12-28.
 //

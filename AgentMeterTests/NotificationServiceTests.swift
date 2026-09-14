@@ -1,12 +1,12 @@
 //
 //  NotificationServiceTests.swift
-//  ClaudeMeterTests
+//  AgentMeterTests
 //
 //  Created by Edd on 2026-01-09.
 //
 
 import XCTest
-@testable import ClaudeMeter
+@testable import AgentMeter
 
 @MainActor
 final class NotificationServiceTests: XCTestCase {

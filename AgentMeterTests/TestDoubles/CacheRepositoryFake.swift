@@ -1,12 +1,12 @@
 //
 //  CacheRepositoryFake.swift
-//  ClaudeMeterTests
+//  AgentMeterTests
 //
 //  Created by Edd on 2026-01-09.
 //
 
 import Foundation
-@testable import ClaudeMeter
+@testable import AgentMeter
 
 actor CacheRepositoryFake: CacheRepositoryProtocol {
     var cachedData: UsageData?

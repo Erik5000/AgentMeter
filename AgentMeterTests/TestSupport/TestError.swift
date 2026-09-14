@@ -1,6 +1,6 @@
 //
 //  TestError.swift
-//  ClaudeMeterTests
+//  AgentMeterTests
 //
 //  Created by Edd on 2026-01-09.
 //

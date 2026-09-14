@@ -1,6 +1,6 @@
 //
 //  MenuBarIconSnapshotTests.swift
-//  ClaudeMeterTests
+//  AgentMeterTests
 //
 //  Created by Edd on 2026-01-09.
 //
@@ -8,7 +8,7 @@
 import AppKit
 import SnapshotTesting
 import XCTest
-@testable import ClaudeMeter
+@testable import AgentMeter
 
 @MainActor
 final class MenuBarIconSnapshotTests: XCTestCase {

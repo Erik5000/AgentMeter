@@ -1,12 +1,12 @@
 //
 //  NetworkServiceStub.swift
-//  ClaudeMeterTests
+//  AgentMeterTests
 //
 //  Created by Edd on 2026-01-09.
 //
 
 import Foundation
-@testable import ClaudeMeter
+@testable import AgentMeter
 
 actor NetworkServiceStub: NetworkServiceProtocol {
     private let responseData: Data

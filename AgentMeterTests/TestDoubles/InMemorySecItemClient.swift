@@ -1,6 +1,6 @@
 import Foundation
 import Security
-@testable import ClaudeMeter
+@testable import AgentMeter
 
 final class InMemorySecItemClient: SecItemClient, @unchecked Sendable {
     struct ItemKey: Hashable {

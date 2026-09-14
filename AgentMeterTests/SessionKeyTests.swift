@@ -1,5 +1,5 @@
 import XCTest
-@testable import ClaudeMeter
+@testable import AgentMeter
 
 final class SessionKeyTests: XCTestCase {
     func test_sessionKey_acceptsRawSessionKey() throws {

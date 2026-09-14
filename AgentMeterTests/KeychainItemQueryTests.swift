@@ -1,6 +1,6 @@
 import XCTest
 import Security
-@testable import ClaudeMeter
+@testable import AgentMeter
 
 final class KeychainItemQueryTests: XCTestCase {
     func test_passwordQuery_usesDataProtectionKeychainAndRefusesAuthUI() {

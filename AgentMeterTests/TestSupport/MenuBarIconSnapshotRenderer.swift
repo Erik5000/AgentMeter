@@ -1,13 +1,13 @@
 //
 //  MenuBarIconSnapshotRenderer.swift
-//  ClaudeMeterTests
+//  AgentMeterTests
 //
 //  Created by Edd on 2026-01-09.
 //
 
 import AppKit
 import SwiftUI
-@testable import ClaudeMeter
+@testable import AgentMeter
 
 @MainActor
 enum MenuBarIconSnapshotRenderer {

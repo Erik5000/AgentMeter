@@ -15,10 +15,10 @@
             buildForAnalyzing = "YES">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "68EC6CB62ED4AD85009E99EE"
+               BlueprintIdentifier = "6814B1062EC74F6000B4B5C3"
                BuildableName = "AgentMeter.app"
-               BlueprintName = "ClaudeMeter"
-               ReferencedContainer = "container:ClaudeMeter.xcodeproj">
+               BlueprintName = "AgentMeter"
+               ReferencedContainer = "container:AgentMeter.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
       </BuildActionEntries>
@@ -35,10 +35,10 @@
             parallelizable = "YES">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "68EC6CC62ED4AD87009E99EE"
-               BuildableName = "ClaudeMeterTests.xctest"
-               BlueprintName = "ClaudeMeterTests"
-               ReferencedContainer = "container:ClaudeMeter.xcodeproj">
+               BlueprintIdentifier = "281275B8A43D48EF3E864245"
+               BuildableName = "AgentMeterTests.xctest"
+               BlueprintName = "AgentMeterTests"
+               ReferencedContainer = "container:AgentMeter.xcodeproj">
             </BuildableReference>
          </TestableReference>
       </Testables>
@@ -57,10 +57,10 @@
          runnableDebuggingMode = "0">
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "68EC6CB62ED4AD85009E99EE"
+            BlueprintIdentifier = "6814B1062EC74F6000B4B5C3"
             BuildableName = "AgentMeter.app"
-            BlueprintName = "ClaudeMeter"
-            ReferencedContainer = "container:ClaudeMeter.xcodeproj">
+            BlueprintName = "AgentMeter"
+            ReferencedContainer = "container:AgentMeter.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
       <CommandLineArguments>
@@ -108,10 +108,10 @@
          runnableDebuggingMode = "0">
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "68EC6CB62ED4AD85009E99EE"
+            BlueprintIdentifier = "6814B1062EC74F6000B4B5C3"
             BuildableName = "AgentMeter.app"
-            BlueprintName = "ClaudeMeter"
-            ReferencedContainer = "container:ClaudeMeter.xcodeproj">
+            BlueprintName = "AgentMeter"
+            ReferencedContainer = "container:AgentMeter.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
    </ProfileAction>

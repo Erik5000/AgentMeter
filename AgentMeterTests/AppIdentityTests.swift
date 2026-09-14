@@ -1,5 +1,5 @@
 import XCTest
-@testable import ClaudeMeter
+@testable import AgentMeter
 
 final class AppIdentityTests: XCTestCase {
     func test_displayName_isAgentMeter() {

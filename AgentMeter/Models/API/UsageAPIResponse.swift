@@ -1,6 +1,6 @@
 //
 //  UsageAPIResponse.swift
-//  ClaudeMeter
+//  AgentMeter
 //
 //  Created by Edd on 2025-11-14.
 //

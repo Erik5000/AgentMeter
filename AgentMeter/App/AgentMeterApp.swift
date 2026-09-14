@@ -1,6 +1,6 @@
 //
-//  ClaudeMeterApp.swift
-//  ClaudeMeter
+//  AgentMeterApp.swift
+//  AgentMeter
 //
 //  Created by Edd on 2025-11-14.
 //
@@ -9,7 +9,7 @@ import SwiftUI
 
 /// Main app entry point
 @main
-struct ClaudeMeterApp: App {
+struct AgentMeterApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
     @State private var appModel: AppModel
 

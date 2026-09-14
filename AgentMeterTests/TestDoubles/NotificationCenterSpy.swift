@@ -1,12 +1,12 @@
 //
 //  NotificationCenterSpy.swift
-//  ClaudeMeterTests
+//  AgentMeterTests
 //
 //  Created by Edd on 2026-01-09.
 //
 
 import UserNotifications
-@testable import ClaudeMeter
+@testable import AgentMeter
 
 @MainActor
 final class NotificationCenterSpy: UserNotificationCenterProtocol {

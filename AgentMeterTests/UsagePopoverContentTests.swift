@@ -1,5 +1,5 @@
 import XCTest
-@testable import ClaudeMeter
+@testable import AgentMeter
 
 final class UsagePopoverContentTests: XCTestCase {
     func test_hasUsageContent_whenClaudeIsMissingAndCodexIsPresent_isDisplayable() {

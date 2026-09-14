@@ -1,5 +1,5 @@
 import XCTest
-@testable import ClaudeMeter
+@testable import AgentMeter
 
 final class CodexUsageServiceTests: XCTestCase {
     func test_rateLimitResponse_mapsSessionAndWeeklyUsage() throws {

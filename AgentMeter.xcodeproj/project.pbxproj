@@ -17,38 +17,38 @@
 			containerPortal = 6814B0FF2EC74F6000B4B5C3 /* Project object */;
 			proxyType = 1;
 			remoteGlobalIDString = 6814B1062EC74F6000B4B5C3;
-			remoteInfo = ClaudeMeter;
+			remoteInfo = AgentMeter;
 		};
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
 		6814B1072EC74F6000B4B5C3 /* AgentMeter.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = AgentMeter.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		E19FC5088677C21D48B7E68B /* ClaudeMeterTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = ClaudeMeterTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		E19FC5088677C21D48B7E68B /* AgentMeterTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = AgentMeterTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
-		6814B1092EC74F6000B4B5C3 /* ClaudeMeter */ = {
+		6814B1092EC74F6000B4B5C3 /* AgentMeter */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
-				A11INFOEXCEPT000000000001 /* Exceptions for "ClaudeMeter" folder in "ClaudeMeter" target */,
+				A11INFOEXCEPT000000000001 /* Exceptions for "AgentMeter" folder in "AgentMeter" target */,
 			);
-			path = ClaudeMeter;
+			path = AgentMeter;
 			sourceTree = "<group>";
 		};
-		EFD5C9BBC5AFCE7EF8910B35 /* ClaudeMeterTests */ = {
+		EFD5C9BBC5AFCE7EF8910B35 /* AgentMeterTests */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
-			path = ClaudeMeterTests;
+			path = AgentMeterTests;
 			sourceTree = "<group>";
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
-		A11INFOEXCEPT000000000001 /* Exceptions for "ClaudeMeter" folder in "ClaudeMeter" target */ = {
+		A11INFOEXCEPT000000000001 /* Exceptions for "AgentMeter" folder in "AgentMeter" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				Resources/Info.plist,
 			);
-			target = 6814B1062EC74F6000B4B5C3 /* ClaudeMeter */;
+			target = 6814B1062EC74F6000B4B5C3 /* AgentMeter */;
 		};
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
@@ -75,8 +75,8 @@
 		6814B0FE2EC74F6000B4B5C3 = {
 			isa = PBXGroup;
 			children = (
-				6814B1092EC74F6000B4B5C3 /* ClaudeMeter */,
-				EFD5C9BBC5AFCE7EF8910B35 /* ClaudeMeterTests */,
+				6814B1092EC74F6000B4B5C3 /* AgentMeter */,
+				EFD5C9BBC5AFCE7EF8910B35 /* AgentMeterTests */,
 				6814B1082EC74F6000B4B5C3 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -85,7 +85,7 @@
 			isa = PBXGroup;
 			children = (
 				6814B1072EC74F6000B4B5C3 /* AgentMeter.app */,
-				E19FC5088677C21D48B7E68B /* ClaudeMeterTests.xctest */,
+				E19FC5088677C21D48B7E68B /* AgentMeterTests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -93,9 +93,9 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		281275B8A43D48EF3E864245 /* ClaudeMeterTests */ = {
+		281275B8A43D48EF3E864245 /* AgentMeterTests */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = D3F3D03AF401D3C31DA2A40E /* Build configuration list for PBXNativeTarget "ClaudeMeterTests" */;
+			buildConfigurationList = D3F3D03AF401D3C31DA2A40E /* Build configuration list for PBXNativeTarget "AgentMeterTests" */;
 			buildPhases = (
 				32C5E2ED397CF3A161586E68 /* Sources */,
 				269009429DB6ABE8EA9B9366 /* Frameworks */,
@@ -107,19 +107,19 @@
 				D6936892A8E6E78EDBBD393E /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
-				EFD5C9BBC5AFCE7EF8910B35 /* ClaudeMeterTests */,
+				EFD5C9BBC5AFCE7EF8910B35 /* AgentMeterTests */,
 			);
-			name = ClaudeMeterTests;
+			name = AgentMeterTests;
 			packageProductDependencies = (
 				1E869117452041001C7AF869 /* SnapshotTesting */,
 			);
-			productName = ClaudeMeterTests;
-			productReference = E19FC5088677C21D48B7E68B /* ClaudeMeterTests.xctest */;
+			productName = AgentMeterTests;
+			productReference = E19FC5088677C21D48B7E68B /* AgentMeterTests.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
 		};
-		6814B1062EC74F6000B4B5C3 /* ClaudeMeter */ = {
+		6814B1062EC74F6000B4B5C3 /* AgentMeter */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 6814B1142EC74F6000B4B5C3 /* Build configuration list for PBXNativeTarget "ClaudeMeter" */;
+			buildConfigurationList = 6814B1142EC74F6000B4B5C3 /* Build configuration list for PBXNativeTarget "AgentMeter" */;
 			buildPhases = (
 				6814B1032EC74F6000B4B5C3 /* Sources */,
 				6814B1042EC74F6000B4B5C3 /* Frameworks */,
@@ -130,13 +130,13 @@
 			dependencies = (
 			);
 			fileSystemSynchronizedGroups = (
-				6814B1092EC74F6000B4B5C3 /* ClaudeMeter */,
+				6814B1092EC74F6000B4B5C3 /* AgentMeter */,
 			);
-			name = ClaudeMeter;
+			name = AgentMeter;
 			packageProductDependencies = (
 				B4C1B3B02ECA700100000001 /* SweetCookieKit */,
 			);
-			productName = ClaudeMeter;
+			productName = AgentMeter;
 			productReference = 6814B1072EC74F6000B4B5C3 /* AgentMeter.app */;
 			productType = "com.apple.product-type.application";
 		};
@@ -159,7 +159,7 @@
 					};
 				};
 			};
-			buildConfigurationList = 6814B1022EC74F6000B4B5C3 /* Build configuration list for PBXProject "ClaudeMeter" */;
+			buildConfigurationList = 6814B1022EC74F6000B4B5C3 /* Build configuration list for PBXProject "AgentMeter" */;
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
 			knownRegions = (
@@ -177,8 +177,8 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				6814B1062EC74F6000B4B5C3 /* ClaudeMeter */,
-				281275B8A43D48EF3E864245 /* ClaudeMeterTests */,
+				6814B1062EC74F6000B4B5C3 /* AgentMeter */,
+				281275B8A43D48EF3E864245 /* AgentMeterTests */,
 			);
 		};
 /* End PBXProject section */
@@ -220,7 +220,7 @@
 /* Begin PBXTargetDependency section */
 		D6936892A8E6E78EDBBD393E /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			target = 6814B1062EC74F6000B4B5C3 /* ClaudeMeter */;
+			target = 6814B1062EC74F6000B4B5C3 /* AgentMeter */;
 			targetProxy = FF2178BD9A35161007E2A786 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
@@ -412,7 +412,7 @@
 				ENABLE_RESOURCE_ACCESS_USB = NO;
 				ENABLE_USER_SELECTED_FILES = readonly;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = ClaudeMeter/Resources/Info.plist;
+				INFOPLIST_FILE = AgentMeter/Resources/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = AgentMeter;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
 				INFOPLIST_KEY_LSUIElement = YES;
@@ -425,7 +425,7 @@
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.erik5000.AgentMeter;
-				PRODUCT_MODULE_NAME = ClaudeMeter;
+				PRODUCT_MODULE_NAME = AgentMeter;
 				PRODUCT_NAME = AgentMeter;
 				REGISTER_APP_GROUPS = YES;
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
@@ -461,7 +461,7 @@
 				ENABLE_RESOURCE_ACCESS_USB = NO;
 				ENABLE_USER_SELECTED_FILES = readonly;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = ClaudeMeter/Resources/Info.plist;
+				INFOPLIST_FILE = AgentMeter/Resources/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = AgentMeter;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
 				INFOPLIST_KEY_LSUIElement = YES;
@@ -474,7 +474,7 @@
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.erik5000.AgentMeter;
-				PRODUCT_MODULE_NAME = ClaudeMeter;
+				PRODUCT_MODULE_NAME = AgentMeter;
 				PRODUCT_NAME = AgentMeter;
 				REGISTER_APP_GROUPS = YES;
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
@@ -489,7 +489,7 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		6814B1022EC74F6000B4B5C3 /* Build configuration list for PBXProject "ClaudeMeter" */ = {
+		6814B1022EC74F6000B4B5C3 /* Build configuration list for PBXProject "AgentMeter" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				6814B1122EC74F6000B4B5C3 /* Debug */,
@@ -498,7 +498,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		6814B1142EC74F6000B4B5C3 /* Build configuration list for PBXNativeTarget "ClaudeMeter" */ = {
+		6814B1142EC74F6000B4B5C3 /* Build configuration list for PBXNativeTarget "AgentMeter" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				6814B1152EC74F6000B4B5C3 /* Debug */,
@@ -507,7 +507,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		D3F3D03AF401D3C31DA2A40E /* Build configuration list for PBXNativeTarget "ClaudeMeterTests" */ = {
+		D3F3D03AF401D3C31DA2A40E /* Build configuration list for PBXNativeTarget "AgentMeterTests" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				1D8A99FFFA877CBA079BD0CA /* Debug */,

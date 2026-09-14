@@ -1,5 +1,5 @@
 import XCTest
-@testable import ClaudeMeter
+@testable import AgentMeter
 
 @MainActor
 final class AppModelTests: XCTestCase {

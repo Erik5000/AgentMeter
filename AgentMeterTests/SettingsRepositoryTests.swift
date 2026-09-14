@@ -1,12 +1,12 @@
 //
 //  SettingsRepositoryTests.swift
-//  ClaudeMeterTests
+//  AgentMeterTests
 //
 //  Created by Edd on 2026-01-09.
 //
 
 import XCTest
-@testable import ClaudeMeter
+@testable import AgentMeter
 
 final class SettingsRepositoryTests: XCTestCase {
     func test_settingsPersistAcrossLaunches() async throws {

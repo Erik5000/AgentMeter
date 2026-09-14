@@ -1,5 +1,5 @@
 import Foundation
-@testable import ClaudeMeter
+@testable import AgentMeter
 
 actor SessionKeyImportServiceStub: SessionKeyImportServiceProtocol {
     let result: Result<ImportedSessionKey, Error>

@@ -1,5 +1,5 @@
 import Foundation
-@testable import ClaudeMeter
+@testable import AgentMeter
 
 actor CodexUsageServiceStub: CodexUsageServiceProtocol {
     let result: Result<CodexUsageData, Error>

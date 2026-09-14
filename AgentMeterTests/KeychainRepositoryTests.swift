@@ -1,5 +1,5 @@
 import XCTest
-@testable import ClaudeMeter
+@testable import AgentMeter
 
 final class KeychainRepositoryTests: XCTestCase {
     private let account = "default"
