@@ -23,6 +23,16 @@ final class KeychainItemQueryTests: XCTestCase {
         )
     }
 
+    func test_passwordQuery_canDisableDataProtectionForUnsignedLocalBuilds() {
+        let query = KeychainItemQuery.password(
+            account: "default",
+            service: AppIdentity.keychainService,
+            usesDataProtectionKeychain: false
+        )
+
+        XCTAssertEqual(query[kSecUseDataProtectionKeychain as String] as? Bool, false)
+    }
+
     func test_lookupQuery_requestsASingleSecretWithoutPromptingUI() {
         let query = KeychainItemQuery.lookup(
             account: "default",

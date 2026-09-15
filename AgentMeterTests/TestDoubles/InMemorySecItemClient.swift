@@ -16,6 +16,10 @@ final class InMemorySecItemClient: SecItemClient, @unchecked Sendable {
     private(set) var addCount = 0
     private(set) var updateCount = 0
     private(set) var deleteCount = 0
+    var dataProtectionAddStatus: OSStatus?
+    var dataProtectionCopyStatus: OSStatus?
+    var dataProtectionUpdateStatus: OSStatus?
+    var dataProtectionDeleteStatus: OSStatus?
 
     func seed(account: String, service: String, dataProtection: Bool, value: String) {
         lock.lock()
@@ -37,6 +41,10 @@ final class InMemorySecItemClient: SecItemClient, @unchecked Sendable {
         lock.lock()
         defer { lock.unlock() }
         addCount += 1
+        if boolValue(attributes[kSecUseDataProtectionKeychain as String]),
+           let status = dataProtectionAddStatus {
+            return status
+        }
         let key = itemKey(from: attributes)
         guard items[key] == nil else { return errSecDuplicateItem }
         guard let data = attributes[kSecValueData as String] as? Data else {
@@ -51,6 +59,10 @@ final class InMemorySecItemClient: SecItemClient, @unchecked Sendable {
         defer { lock.unlock() }
         copyMatchingCount += 1
         queriedServices.append(query[kSecAttrService as String] as? String ?? "")
+        if boolValue(query[kSecUseDataProtectionKeychain as String]),
+           let status = dataProtectionCopyStatus {
+            return (status, nil)
+        }
         let key = itemKey(from: query)
         guard let data = items[key] else { return (errSecItemNotFound, nil) }
         if boolValue(query[kSecReturnData as String]) {
@@ -63,6 +75,10 @@ final class InMemorySecItemClient: SecItemClient, @unchecked Sendable {
         lock.lock()
         defer { lock.unlock() }
         updateCount += 1
+        if boolValue(query[kSecUseDataProtectionKeychain as String]),
+           let status = dataProtectionUpdateStatus {
+            return status
+        }
         let key = itemKey(from: query)
         guard items[key] != nil else { return errSecItemNotFound }
         guard let data = attributes[kSecValueData as String] as? Data else {
@@ -76,6 +92,10 @@ final class InMemorySecItemClient: SecItemClient, @unchecked Sendable {
         lock.lock()
         defer { lock.unlock() }
         deleteCount += 1
+        if boolValue(query[kSecUseDataProtectionKeychain as String]),
+           let status = dataProtectionDeleteStatus {
+            return status
+        }
         let key = itemKey(from: query)
         guard items.removeValue(forKey: key) != nil else { return errSecItemNotFound }
         return errSecSuccess

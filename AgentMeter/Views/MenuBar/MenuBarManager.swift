@@ -199,8 +199,31 @@ final class MenuBarManager {
     // MARK: - Popover Control
 
     @objc private func togglePopover() {
-        guard let popover else { return }
-        popover.isShown ? closePopover() : showPopover()
+        switch StatusItemClickAction.from(eventType: NSApp.currentEvent?.type ?? .leftMouseUp) {
+        case .showMenu:
+            showStatusMenu()
+        case .togglePopover:
+            guard let popover else { return }
+            popover.isShown ? closePopover() : showPopover()
+        }
+    }
+
+    private func showStatusMenu() {
+        guard let statusItem, let button = statusItem.button, let event = NSApp.currentEvent else {
+            return
+        }
+
+        closePopover()
+
+        let menu = NSMenu()
+        let quitItem = NSMenuItem(
+            title: MenuBarChrome.quitTitle,
+            action: #selector(NSApplication.terminate(_:)),
+            keyEquivalent: "q"
+        )
+        quitItem.target = NSApp
+        menu.addItem(quitItem)
+        NSMenu.popUpContextMenu(menu, with: event, for: button)
     }
 
     private func showPopover() {

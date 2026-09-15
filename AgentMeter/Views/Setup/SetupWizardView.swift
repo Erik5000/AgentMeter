@@ -161,12 +161,19 @@ struct SetupWizardView: View {
                 .controlSize(.large)
                 .disabled(!isFormatValid || isBusy)
                 .padding(.horizontal, 28)
-                .padding(.bottom, 24)
+                .padding(.bottom, 12)
                 .accessibilityLabel(isValidating ? "Checking session" : "Continue with pasted session")
-            } else {
-                Color.clear
-                    .frame(height: 24)
             }
+
+            Divider()
+
+            HStack {
+                Spacer()
+                MenuBarQuitButton()
+            }
+            .font(.callout)
+            .padding(.horizontal, 28)
+            .padding(.vertical, 12)
         }
         .frame(width: 370, height: 460)
         .background(Color(nsColor: .windowBackgroundColor))

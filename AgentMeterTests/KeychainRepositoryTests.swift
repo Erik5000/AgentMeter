@@ -1,4 +1,5 @@
 import XCTest
+import Security
 @testable import AgentMeter
 
 final class KeychainRepositoryTests: XCTestCase {
@@ -18,6 +19,37 @@ final class KeychainRepositoryTests: XCTestCase {
         )
         XCTAssertNil(secItem.storedValue(account: account, service: modernService, dataProtection: false))
         XCTAssertFalse(secItem.queriedServices.contains(legacyService))
+    }
+
+    func test_save_retriesWithoutDataProtectionWhenEntitlementIsMissing() async throws {
+        let secItem = InMemorySecItemClient()
+        secItem.dataProtectionAddStatus = errSecMissingEntitlement
+        let repository = repository(secItem: secItem)
+
+        try await repository.save(sessionKey: TestConstants.sessionKeyValue, account: account)
+
+        XCTAssertNil(secItem.storedValue(account: account, service: modernService, dataProtection: true))
+        XCTAssertEqual(
+            secItem.storedValue(account: account, service: modernService, dataProtection: false),
+            TestConstants.sessionKeyValue
+        )
+        XCTAssertEqual(secItem.addCount, 2)
+    }
+
+    func test_retrieve_usesFileBasedItemWhenDataProtectionEntitlementIsMissing() async throws {
+        let secItem = InMemorySecItemClient()
+        secItem.dataProtectionCopyStatus = errSecMissingEntitlement
+        secItem.seed(
+            account: account,
+            service: modernService,
+            dataProtection: false,
+            value: TestConstants.sessionKeyValue
+        )
+        let repository = repository(secItem: secItem)
+
+        let value = try await repository.retrieve(account: account)
+
+        XCTAssertEqual(value, TestConstants.sessionKeyValue)
     }
 
     func test_retrieve_doesNotHitKeychainAgainAfterFirstRead() async throws {
@@ -99,6 +131,19 @@ final class KeychainRepositoryTests: XCTestCase {
             secItem.storedValue(account: account, service: legacyService, dataProtection: false),
             TestConstants.sessionKeyValue
         )
+    }
+
+    func test_exists_isTrueAfterSavingWhenDataProtectionEntitlementIsMissing() async throws {
+        let secItem = InMemorySecItemClient()
+        secItem.dataProtectionAddStatus = errSecMissingEntitlement
+        secItem.dataProtectionCopyStatus = errSecMissingEntitlement
+        let repository = repository(secItem: secItem)
+
+        try await repository.save(sessionKey: TestConstants.sessionKeyValue, account: account)
+
+        let exists = await repository.exists(account: account)
+
+        XCTAssertTrue(exists)
     }
 
     private func repository(secItem: InMemorySecItemClient) -> KeychainRepository {

@@ -162,6 +162,7 @@ This application accesses Claude's web API using browser-based authentication me
 **Data storage:**
 
 - Session keys are stored securely in macOS Keychain (encrypted, device-local only)
+- Unsigned builds use the login Keychain when macOS rejects data-protection Keychain access; macOS may request Keychain access after the app is rebuilt or updated
 - Browser import reads local browser cookies to extract your Claude session, then stores only the session key in Keychain
 - Usage data is cached locally (unencrypted, contains usage percentages only)
 - No data is sent to third-party servers or collected by the developer

@@ -205,13 +205,7 @@ struct UsagePopoverView: View {
 
             Spacer()
 
-            Button("Quit \(AppIdentity.displayName)") {
-                NSApplication.shared.terminate(nil)
-            }
-            .buttonStyle(.plain)
-            .foregroundStyle(.secondary)
-            .keyboardShortcut("q", modifiers: .command)
-            .accessibilityLabel("Quit \(AppIdentity.displayName)")
+            MenuBarQuitButton()
         }
         .font(.callout)
     }

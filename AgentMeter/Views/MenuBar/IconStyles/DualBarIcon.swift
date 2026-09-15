@@ -28,11 +28,15 @@ struct DualBarIcon: View {
 
     var body: some View {
         HStack(spacing: 4) {
-            if isLoading {
+            if layout == .loading {
                 Image(systemName: "arrow.clockwise")
                     .font(.system(size: 11, weight: .medium))
                     .foregroundStyle(statusColor)
-            } else if showsCodex {
+            } else if layout == .idle {
+                Image(systemName: "chart.bar.xaxis")
+                    .font(.system(size: 12, weight: .semibold))
+                    .foregroundStyle(.secondary)
+            } else if layout == .pairedColumns {
                 VStack(alignment: .leading, spacing: barSpacing) {
                     metricRow(claude: claudeSession, codex: codexSession)
                     metricRow(claude: claudeWeekly, codex: codexWeekly)
@@ -67,6 +71,18 @@ struct DualBarIcon: View {
         .padding(.horizontal, 4)
         .accessibilityLabel(accessibilityLabel)
         .accessibilityValue(status.accessibilityDescription)
+    }
+
+    private var hasProviderValues: Bool {
+        claudeSession != nil || claudeWeekly != nil || codexSession != nil || codexWeekly != nil
+    }
+
+    private var layout: DualBarIconLayout {
+        DualBarIconLayout.resolve(
+            isLoading: isLoading,
+            showsCodex: showsCodex,
+            hasProviderValues: hasProviderValues
+        )
     }
 
     private func metricRow(claude: Double?, codex: Double?) -> some View {
@@ -123,10 +139,16 @@ struct DualBarIcon: View {
     }
 
     private var accessibilityLabel: String {
-        if showsCodex {
+        switch layout {
+        case .idle:
+            return "Waiting to connect"
+        case .loading:
+            return "Updating usage"
+        case .pairedColumns:
             return "Claude session \(percentLabel(claudeSession)), Codex session \(percentLabel(codexSession)), Claude weekly \(percentLabel(claudeWeekly)), Codex weekly \(percentLabel(codexWeekly))"
+        case .singleColumn:
+            return "Session \(Int(sessionBarValue)) percent, weekly \(Int(weeklyBarValue)) percent"
         }
-        return "Session \(Int(sessionBarValue)) percent, weekly \(Int(weeklyBarValue)) percent"
     }
 
     private func percentLabel(_ value: Double?) -> String {
