@@ -306,6 +306,67 @@ final class UsageServiceTests: XCTestCase {
             XCTFail("Expected sonnet usage reset date")
         }
     }
+
+    func test_usageResponse_withScopedFableLimit_mapsWeeklyFableUsage() throws {
+        let responseData = """
+        {
+          "five_hour": {
+            "utilization": 18,
+            "resets_at": "2026-09-22T16:00:00.000Z"
+          },
+          "seven_day": {
+            "utilization": 40,
+            "resets_at": "2026-09-28T10:01:00.000Z"
+          },
+          "seven_day_sonnet": null,
+          "limits": [
+            {
+              "kind": "weekly_scoped",
+              "percent": 27,
+              "resets_at": "2026-09-29T09:30:00Z",
+              "is_active": false,
+              "scope": {
+                "model": {
+                  "display_name": "Fable"
+                }
+              }
+            }
+          ]
+        }
+        """.data(using: .utf8)!
+
+        let response = try JSONDecoder().decode(UsageAPIResponse.self, from: responseData)
+        let usageData = try response.toDomain()
+
+        XCTAssertEqual(usageData.fableUsage?.utilization, 27)
+        XCTAssertEqual(
+            usageData.fableUsage?.resetAt.timeIntervalSince1970,
+            ISO8601DateFormatter().date(from: "2026-09-29T09:30:00Z")?.timeIntervalSince1970
+        )
+    }
+
+    func test_usageData_withoutFableCacheField_decodesSafely() throws {
+        let cachedData = """
+        {
+          "session_usage": {
+            "utilization": 18,
+            "reset_at": "2026-09-22T16:00:00Z"
+          },
+          "weekly_usage": {
+            "utilization": 40,
+            "reset_at": "2026-09-28T10:01:00Z"
+          },
+          "sonnet_usage": null,
+          "last_updated": "2026-09-22T12:00:00Z"
+        }
+        """.data(using: .utf8)!
+        let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .iso8601
+
+        let usageData = try decoder.decode(UsageData.self, from: cachedData)
+
+        XCTAssertNil(usageData.fableUsage)
+    }
 }
 
 // MARK: - Helpers

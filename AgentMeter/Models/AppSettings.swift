@@ -27,6 +27,9 @@ struct AppSettings: Codable, Equatable, Sendable {
     /// Whether to show Sonnet usage in the popover
     var isSonnetUsageShown: Bool
 
+    /// Whether to show Fable usage in the popover
+    var isFableUsageShown: Bool
+
     /// Whether to show Codex usage in the popover and menu bar icon
     var isCodexUsageShown: Bool
 
@@ -46,6 +49,7 @@ struct AppSettings: Codable, Equatable, Sendable {
         isFirstLaunch: true,
         cachedOrganizationId: nil,
         isSonnetUsageShown: false,
+        isFableUsageShown: true,
         isCodexUsageShown: true,
         isResetTimeShown: true,
         iconStyle: .dualBar,
@@ -59,6 +63,7 @@ struct AppSettings: Codable, Equatable, Sendable {
         case isFirstLaunch = "is_first_launch"
         case cachedOrganizationId = "cached_organization_id"
         case isSonnetUsageShown = "show_sonnet_usage"
+        case isFableUsageShown = "show_fable_usage"
         case isCodexUsageShown = "show_codex_usage"
         case isResetTimeShown = "show_reset_time"
         case iconStyle = "icon_style"
@@ -77,6 +82,7 @@ extension AppSettings {
         isFirstLaunch = try container.decodeIfPresent(Bool.self, forKey: .isFirstLaunch) ?? defaults.isFirstLaunch
         cachedOrganizationId = try container.decodeIfPresent(UUID.self, forKey: .cachedOrganizationId)
         isSonnetUsageShown = try container.decodeIfPresent(Bool.self, forKey: .isSonnetUsageShown) ?? defaults.isSonnetUsageShown
+        isFableUsageShown = try container.decodeIfPresent(Bool.self, forKey: .isFableUsageShown) ?? defaults.isFableUsageShown
         isCodexUsageShown = try container.decodeIfPresent(Bool.self, forKey: .isCodexUsageShown) ?? defaults.isCodexUsageShown
         isResetTimeShown = try container.decodeIfPresent(Bool.self, forKey: .isResetTimeShown) ?? defaults.isResetTimeShown
         iconStyle = try container.decodeIfPresent(IconStyle.self, forKey: .iconStyle) ?? defaults.iconStyle

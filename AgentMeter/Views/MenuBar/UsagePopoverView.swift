@@ -325,6 +325,29 @@ struct UsagePopoverView: View {
             )
         }
 
+        if appModel.settings.isFableUsageShown,
+           let fableUsage = appModel.usageData?.fableUsage {
+            groups.append(
+                UsageModelGroup(
+                    id: "claude-fable",
+                    title: "Claude",
+                    detail: "Fable",
+                    icon: "sparkles",
+                    metrics: [
+                        UsageWindowMetric(
+                            id: "claude-fable-weekly",
+                            name: "Week",
+                            icon: "calendar",
+                            usageLimit: fableUsage,
+                            windowDuration: Constants.Pacing.weeklyWindow,
+                            usesTimeOnlyResetTimestamp: false,
+                            placeholder: claudePlaceholder
+                        )
+                    ]
+                )
+            )
+        }
+
         guard appModel.settings.isCodexUsageShown else {
             return groups
         }

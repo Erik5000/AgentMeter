@@ -20,6 +20,7 @@ final class SettingsRepositoryTests: XCTestCase {
         settings.hasNotificationsEnabled = false
         settings.isFirstLaunch = false
         settings.cachedOrganizationId = UUID(uuidString: TestConstants.organizationUUIDString)
+        settings.isFableUsageShown = false
         settings.iconStyle = .segments
         settings.isColoredIcon = false
 
@@ -50,6 +51,7 @@ final class SettingsRepositoryTests: XCTestCase {
 
         XCTAssertTrue(settings.isColoredIcon)
         XCTAssertTrue(settings.isCodexUsageShown)
+        XCTAssertTrue(settings.isFableUsageShown)
     }
 
     func test_notificationStatePersistsAcrossLaunches() async throws {

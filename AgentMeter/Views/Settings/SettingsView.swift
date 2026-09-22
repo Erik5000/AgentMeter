@@ -158,12 +158,13 @@ struct SettingsView: View {
     private var popoverSection: some View {
         Section {
             Toggle("Show Codex usage", isOn: $appModel.settings.isCodexUsageShown)
+            Toggle("Show weekly Fable", isOn: $appModel.settings.isFableUsageShown)
             Toggle("Show weekly Sonnet", isOn: $appModel.settings.isSonnetUsageShown)
             Toggle("Show exact reset times", isOn: $appModel.settings.isResetTimeShown)
         } header: {
             Text("Popover")
         } footer: {
-            Text("Codex reads usage from the signed-in Codex app. Sonnet is Claude-only.")
+            Text("Codex reads usage from the signed-in Codex app. Claude model limits appear when your account reports them.")
         }
     }
 
