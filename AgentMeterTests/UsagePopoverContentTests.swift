@@ -102,10 +102,11 @@ final class UsagePopoverContentTests: XCTestCase {
         XCTAssertEqual(bucket.modeName, "GPT-5.6 Luna")
     }
 
-    func test_popoverLayout_fitsTwoModelGroupsWithoutTheOldCompactHeight() {
-        let height = UsagePopoverLayout.preferredHeight(groupMetricCounts: [2, 2])
+    func test_popoverLayout_keepsTypicalModelGroupsCompact() {
+        let height = UsagePopoverLayout.preferredHeight(groupMetricCounts: [2, 1, 1])
 
-        XCTAssertGreaterThan(height, 470)
+        XCTAssertGreaterThan(height, 430)
+        XCTAssertLessThan(height, 520)
         XCTAssertEqual(UsagePopoverLayout.width, 430)
     }
 

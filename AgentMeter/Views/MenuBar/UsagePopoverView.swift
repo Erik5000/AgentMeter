@@ -20,15 +20,19 @@ enum UsagePopoverLayout {
     static let width: CGFloat = 430
 
     static func preferredHeight(groupMetricCounts: [Int], errorBannerCount: Int = 0) -> CGFloat {
-        let chromeHeight: CGFloat = 116
-        let contentInsets: CGFloat = 28
-        let cardSpacing = CGFloat(max(0, groupMetricCounts.count - 1)) * 10
-        let cardsHeight = groupMetricCounts.reduce(CGFloat.zero) { result, metricCount in
-            let dividerHeight = CGFloat(max(0, metricCount - 1)) * 13
-            return result + 72 + CGFloat(metricCount) * 58 + dividerHeight
+        let chromeHeight: CGFloat = 94
+        let contentInsets: CGFloat = 24
+        let surfaceInsets: CGFloat = 28
+        let groupDividerHeight = CGFloat(max(0, groupMetricCounts.count - 1)) * 21
+        let groupsHeight = groupMetricCounts.reduce(CGFloat.zero) { result, metricCount in
+            let metricDividerHeight = CGFloat(max(0, metricCount - 1)) * 21
+            return result + 26 + CGFloat(metricCount) * 51 + metricDividerHeight
         }
         let errorHeight = CGFloat(errorBannerCount) * 82
-        return max(500, chromeHeight + contentInsets + cardSpacing + cardsHeight + errorHeight)
+        return max(
+            320,
+            chromeHeight + contentInsets + surfaceInsets + groupDividerHeight + groupsHeight + errorHeight
+        )
     }
 }
 
@@ -142,8 +146,13 @@ struct UsagePopoverView: View {
             codex: appModel.codexUsageData,
             isCodexUsageShown: appModel.settings.isCodexUsageShown
         ) {
-            VStack(spacing: 10) {
-                ForEach(modelGroups) { group in
+            VStack(spacing: 0) {
+                ForEach(Array(modelGroups.enumerated()), id: \.element.id) { index, group in
+                    if index > 0 {
+                        Divider()
+                            .padding(.vertical, 10)
+                    }
+
                     UsageComparisonCardView(
                         title: group.title,
                         detail: group.detail,
@@ -154,6 +163,13 @@ struct UsagePopoverView: View {
                 }
             }
             .padding(14)
+            .background(.quaternary.opacity(0.22), in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+            .overlay {
+                RoundedRectangle(cornerRadius: 14, style: .continuous)
+                    .stroke(.quaternary.opacity(0.55), lineWidth: 0.5)
+            }
+            .padding(.horizontal, 14)
+            .padding(.vertical, 12)
         } else if appModel.isLoading || appModel.isRefreshing {
             VStack(spacing: 10) {
                 ProgressView()
@@ -292,35 +308,16 @@ struct UsagePopoverView: View {
     }
 
     private var modelGroups: [UsageModelGroup] {
-        var groups = [
-            UsageModelGroup(
-                id: "claude",
-                title: "Claude",
-                detail: nil,
-                icon: "sparkles",
-                metrics: claudeMetrics
-            )
-        ]
+        var groups: [UsageModelGroup] = []
 
-        if appModel.settings.isSonnetUsageShown,
-           let sonnetUsage = appModel.usageData?.sonnetUsage {
+        if appModel.usageData != nil || appModel.errorMessage == nil {
             groups.append(
                 UsageModelGroup(
-                    id: "claude-sonnet",
+                    id: "claude",
                     title: "Claude",
-                    detail: "Sonnet",
+                    detail: "All Models",
                     icon: "sparkles",
-                    metrics: [
-                        UsageWindowMetric(
-                            id: "claude-sonnet-weekly",
-                            name: "Week",
-                            icon: "calendar",
-                            usageLimit: sonnetUsage,
-                            windowDuration: Constants.Pacing.weeklyWindow,
-                            usesTimeOnlyResetTimestamp: false,
-                            placeholder: claudePlaceholder
-                        )
-                    ]
+                    metrics: claudeMetrics
                 )
             )
         }
@@ -339,6 +336,29 @@ struct UsagePopoverView: View {
                             name: "Week",
                             icon: "calendar",
                             usageLimit: fableUsage,
+                            windowDuration: Constants.Pacing.weeklyWindow,
+                            usesTimeOnlyResetTimestamp: false,
+                            placeholder: claudePlaceholder
+                        )
+                    ]
+                )
+            )
+        }
+
+        if appModel.settings.isSonnetUsageShown,
+           let sonnetUsage = appModel.usageData?.sonnetUsage {
+            groups.append(
+                UsageModelGroup(
+                    id: "claude-sonnet",
+                    title: "Claude",
+                    detail: "Sonnet",
+                    icon: "sparkles",
+                    metrics: [
+                        UsageWindowMetric(
+                            id: "claude-sonnet-weekly",
+                            name: "Week",
+                            icon: "calendar",
+                            usageLimit: sonnetUsage,
                             windowDuration: Constants.Pacing.weeklyWindow,
                             usesTimeOnlyResetTimestamp: false,
                             placeholder: claudePlaceholder
@@ -394,31 +414,56 @@ struct UsagePopoverView: View {
         for bucket: CodexUsageBucket,
         usageData: CodexUsageData
     ) -> UsageModelGroup {
-        UsageModelGroup(
-            id: "codex-\(bucket.id)",
-            title: "Codex",
-            detail: codexDetail(for: bucket, usageData: usageData),
-            icon: "chevron.left.forwardslash.chevron.right",
-            metrics: [
+        var metrics: [UsageWindowMetric] = []
+
+        if let sessionUsage = bucket.sessionUsage {
+            metrics.append(
                 UsageWindowMetric(
                     id: "codex-\(bucket.id)-session",
                     name: "Session",
                     icon: "clock",
-                    usageLimit: bucket.sessionUsage,
+                    usageLimit: sessionUsage,
                     windowDuration: bucket.sessionWindowDuration,
                     usesTimeOnlyResetTimestamp: true,
-                    placeholder: "No session limit"
-                ),
+                    placeholder: ""
+                )
+            )
+        }
+
+        if let longTermUsage = bucket.longTermUsage {
+            metrics.append(
                 UsageWindowMetric(
                     id: "codex-\(bucket.id)-long-term",
                     name: UsageWindowTitle.comparisonWeekly(codexMinutes: bucket.longTermWindowMinutes),
                     icon: "calendar",
-                    usageLimit: bucket.longTermUsage,
+                    usageLimit: longTermUsage,
                     windowDuration: bucket.longTermWindowDuration,
                     usesTimeOnlyResetTimestamp: false,
-                    placeholder: "No long-term limit"
+                    placeholder: ""
                 )
-            ]
+            )
+        }
+
+        if metrics.isEmpty {
+            metrics.append(
+                UsageWindowMetric(
+                    id: "codex-\(bucket.id)-unavailable",
+                    name: "Usage",
+                    icon: "chart.bar.xaxis",
+                    usageLimit: nil,
+                    windowDuration: nil,
+                    usesTimeOnlyResetTimestamp: false,
+                    placeholder: "No limits reported"
+                )
+            )
+        }
+
+        return UsageModelGroup(
+            id: "codex-\(bucket.id)",
+            title: "Codex",
+            detail: codexDetail(for: bucket, usageData: usageData),
+            icon: "chevron.left.forwardslash.chevron.right",
+            metrics: metrics
         )
     }
 
@@ -431,22 +476,13 @@ struct UsagePopoverView: View {
             icon: "chevron.left.forwardslash.chevron.right",
             metrics: [
                 UsageWindowMetric(
-                    id: "codex-unavailable-session",
-                    name: "Session",
-                    icon: "clock",
-                    usageLimit: nil,
-                    windowDuration: nil,
-                    usesTimeOnlyResetTimestamp: true,
-                    placeholder: hasLoaded ? "No session limit" : codexPlaceholder
-                ),
-                UsageWindowMetric(
-                    id: "codex-unavailable-long-term",
-                    name: "Week",
-                    icon: "calendar",
+                    id: "codex-unavailable",
+                    name: "Usage",
+                    icon: "chart.bar.xaxis",
                     usageLimit: nil,
                     windowDuration: nil,
                     usesTimeOnlyResetTimestamp: false,
-                    placeholder: hasLoaded ? "No long-term limit" : codexPlaceholder
+                    placeholder: hasLoaded ? "No limits reported" : codexPlaceholder
                 )
             ]
         )

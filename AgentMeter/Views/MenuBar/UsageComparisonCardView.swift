@@ -10,7 +10,7 @@ struct UsageWindowMetric: Identifiable {
     let placeholder: String
 }
 
-/// A provider or model card containing each of its independently metered windows.
+/// A compact provider/model section containing each independently metered window.
 struct UsageComparisonCardView: View {
     let title: String
     let detail: String?
@@ -19,23 +19,18 @@ struct UsageComparisonCardView: View {
     var showsExactResetTime: Bool = true
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
+        VStack(alignment: .leading, spacing: 10) {
             modelHeader
 
-            VStack(spacing: 12) {
+            VStack(spacing: 0) {
                 ForEach(Array(metrics.enumerated()), id: \.element.id) { index, metric in
                     if index > 0 {
                         Divider()
+                            .padding(.vertical, 10)
                     }
                     metricRow(metric)
                 }
             }
-        }
-        .padding(16)
-        .background(.quaternary.opacity(0.28), in: RoundedRectangle(cornerRadius: 14, style: .continuous))
-        .overlay {
-            RoundedRectangle(cornerRadius: 14, style: .continuous)
-                .stroke(.quaternary.opacity(0.6), lineWidth: 0.5)
         }
         .accessibilityElement(children: .combine)
         .accessibilityLabel(accessibilityLabel)
@@ -45,7 +40,7 @@ struct UsageComparisonCardView: View {
         HStack(spacing: 7) {
             Image(systemName: icon)
                 .font(.caption.weight(.semibold))
-                .foregroundStyle(accentColor)
+                .foregroundStyle(.secondary)
 
             Text(title.uppercased())
                 .font(.caption.weight(.semibold))
@@ -53,13 +48,15 @@ struct UsageComparisonCardView: View {
                 .foregroundStyle(.secondary)
 
             if let detail {
-                Text(detail)
-                    .font(.caption2.weight(.medium))
+                Text("·")
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(.secondary)
+
+                Text(detail.uppercased())
+                    .font(.caption.weight(.semibold))
+                    .tracking(0.4)
                     .foregroundStyle(.secondary)
                     .lineLimit(1)
-                    .padding(.horizontal, 7)
-                    .padding(.vertical, 3)
-                    .background(.quaternary.opacity(0.55), in: Capsule())
             }
 
             Spacer(minLength: 0)
@@ -69,14 +66,14 @@ struct UsageComparisonCardView: View {
     @ViewBuilder
     private func metricRow(_ metric: UsageWindowMetric) -> some View {
         if let usageLimit = metric.usageLimit {
-            VStack(alignment: .leading, spacing: 7) {
+            VStack(alignment: .leading, spacing: 5) {
                 HStack(alignment: .firstTextBaseline, spacing: 6) {
-                    metricLabel(metric, color: usageLimit.status.color)
+                    metricLabel(metric)
 
                     Spacer(minLength: 8)
 
                     Text("\(Int(usageLimit.percentage))%")
-                        .font(.system(size: 19, weight: .semibold, design: .rounded))
+                        .font(.system(size: 18, weight: .semibold, design: .rounded))
                         .monospacedDigit()
                         .foregroundStyle(usageLimit.status.color)
                 }
@@ -110,9 +107,9 @@ struct UsageComparisonCardView: View {
             }
             .frame(maxWidth: .infinity, alignment: .leading)
         } else {
-            VStack(alignment: .leading, spacing: 6) {
+            VStack(alignment: .leading, spacing: 5) {
                 HStack(alignment: .firstTextBaseline, spacing: 8) {
-                    metricLabel(metric, color: .secondary)
+                    metricLabel(metric)
 
                     Spacer(minLength: 8)
 
@@ -121,7 +118,7 @@ struct UsageComparisonCardView: View {
                             .controlSize(.mini)
                     } else {
                         Text("—")
-                            .font(.system(size: 19, weight: .semibold, design: .rounded))
+                            .font(.system(size: 18, weight: .semibold, design: .rounded))
                             .foregroundStyle(.tertiary)
                     }
                 }
@@ -134,22 +131,15 @@ struct UsageComparisonCardView: View {
         }
     }
 
-    private func metricLabel(_ metric: UsageWindowMetric, color: Color) -> some View {
+    private func metricLabel(_ metric: UsageWindowMetric) -> some View {
         HStack(spacing: 6) {
             Image(systemName: metric.icon)
                 .font(.caption)
-                .foregroundStyle(color)
+                .foregroundStyle(.secondary)
 
             Text(metric.name)
                 .font(.caption.weight(.semibold))
         }
-    }
-
-    private var accentColor: Color {
-        metrics
-            .compactMap(\.usageLimit)
-            .max { $0.percentage < $1.percentage }?
-            .status.color ?? .secondary
     }
 
     private var accessibilityLabel: String {

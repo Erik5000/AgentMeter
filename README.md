@@ -6,7 +6,7 @@ AgentMeter is a macOS menu bar app for **Claude and Codex** usage limits. Fork o
 
 - **Real-time usage monitoring** - Track Claude and Codex usage limits, including model-specific weekly quotas such as Claude Fable
 - **Menu bar integration** - Dual Bar by default so Claude and Codex can be compared at a glance
-- **Model-grouped popover** - Session and long-term meters are grouped into full-width cards by provider and model, with no nested scrolling
+- **Model-grouped popover** - Session and long-term meters are grouped into compact sections by provider and model, with no nested scrolling
 - **Claude model limits** - Show Fable weekly usage by default and optionally show Sonnet when those limits are reported for your account
 - **Model-aware Codex meters** - Separate shared and model-specific limits with their actual reset windows
 - **Multiple icon styles** - Dual Bar is used while Codex is shown; Battery, Circular, Minimal, Segments, Dual Bar, and Gauge are available when Codex is hidden

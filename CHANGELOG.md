@@ -15,7 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Forked from ClaudeMeter; product name is AgentMeter.
 - Renamed the Xcode project, scheme, Swift module, and source folders from ClaudeMeter to AgentMeter.
 - Tracks Codex usage alongside Claude.
-- Grouped session and long-term meters into full-width cards for each provider/model, and expanded the popover to fit them without scrolling.
+- Grouped session and long-term meters into compact sections for each provider/model, sized the popover to its content, and removed unavailable limit rows.
 - Cache export path is `~/.agentmeter/usage.json` (Claude usage only).
 - GitHub Releases are unsigned; README documents the Gatekeeper bypass for first launch.
 
