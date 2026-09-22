@@ -4,8 +4,10 @@ AgentMeter is a macOS menu bar app for **Claude and Codex** usage limits. Fork o
 
 ## Features
 
-- **Real-time usage monitoring** - Track Claude and Codex usage limits, including Claude Fable weekly usage and model-specific Codex quotas when available
+- **Real-time usage monitoring** - Track Claude and Codex usage limits, including model-specific weekly quotas such as Claude Fable
 - **Menu bar integration** - Dual Bar by default so Claude and Codex can be compared at a glance
+- **Model-grouped popover** - Session and long-term meters are grouped into full-width cards by provider and model, with no nested scrolling
+- **Claude model limits** - Show Fable weekly usage by default and optionally show Sonnet when those limits are reported for your account
 - **Model-aware Codex meters** - Separate shared and model-specific limits with their actual reset windows
 - **Multiple icon styles** - Dual Bar is used while Codex is shown; Battery, Circular, Minimal, Segments, Dual Bar, and Gauge are available when Codex is hidden
 - **Pacing indicator** - Flame icon warns when you're using Claude faster than sustainable pace
@@ -73,9 +75,22 @@ Your Claude session key is stored in your browser cookies.
 - Click the icon to see session and long-term limits grouped by Claude or Codex model without a nested scroll view
 - Receive automatic notifications when reaching warning or critical thresholds
 
+### Usage Meters
+
+The popover groups limits by model instead of grouping every provider under a session or weekly heading:
+
+- **Claude** shows the shared five-hour session and seven-day weekly limits.
+- **Claude · Fable** shows Fable's model-specific weekly limit whenever Claude reports one for your account.
+- **Claude · Sonnet** shows the Sonnet-specific weekly limit when available and enabled in Settings.
+- **Codex** shows each shared or model-specific quota reported by the signed-in Codex app, using the actual window duration.
+
+Fable tracking is enabled by default. Open **Settings → General → Popover** to show or hide Fable, Sonnet, or Codex usage and to control whether exact reset times are displayed. A model-specific card is omitted when the provider does not report that limit.
+
 ### Integration with External Tools
 
 AgentMeter exports Claude usage data to `~/.agentmeter/usage.json` for use with external tools like Claude Code statusline scripts, shell prompts, or custom dashboards. Codex usage is shown in the app but is not included in this file.
+
+`fable_usage` and `sonnet_usage` are optional. They are omitted when Claude does not report those model-specific limits.
 
 **JSON format:**
 
@@ -140,15 +155,19 @@ Then configure Claude Code's `~/.claude/settings.json`:
 
 ## Building from Source
 
+Installing a published release does not require Xcode. Xcode is only needed when building AgentMeter from source.
+
 ```bash
 # Clone the repository
 git clone https://github.com/Erik5000/AgentMeter.git
 cd AgentMeter
 
-# Open in Xcode
-open AgentMeter.xcodeproj
+# Build and test from Terminal
+xcodebuild clean build -project AgentMeter.xcodeproj -scheme AgentMeter -configuration Debug
+xcodebuild test -project AgentMeter.xcodeproj -scheme AgentMeter -configuration Debug
 
-# Build and run (⌘R)
+# Or open the project and run it with Command-R
+open AgentMeter.xcodeproj
 ```
 
 Requires Xcode 16.0 or later.
