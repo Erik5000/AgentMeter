@@ -10,6 +10,7 @@ enum CodexPlanDisplay {
         "free": "Free",
         "go": "Go",
         "edu": "Edu",
+        "prolite": "Pro Lite",
         "self_serve_business_prolite": "Pro"
     ]
 

@@ -27,13 +27,13 @@ final class CodexUsageServiceTests: XCTestCase {
 
         let usage = try CodexUsageService.parseRateLimitsResponse(response, now: now)
 
-        XCTAssertEqual(usage.sessionUsage.percentage, 32)
+        XCTAssertEqual(usage.sessionUsage?.percentage, 32)
         XCTAssertEqual(usage.sessionWindowMinutes, 300)
         XCTAssertEqual(usage.weeklyUsage?.percentage, 25)
         XCTAssertEqual(usage.weeklyWindowMinutes, 10080)
         XCTAssertEqual(usage.planType, "plus")
         XCTAssertEqual(usage.lastUpdated, now)
-        XCTAssertEqual(usage.sessionUsage.resetAt, Date(timeIntervalSince1970: 1_788_378_759))
+        XCTAssertEqual(usage.sessionUsage?.resetAt, Date(timeIntervalSince1970: 1_788_378_759))
     }
 
     func test_rateLimitResponse_withoutPrimaryLimit_isRejected() {
@@ -92,7 +92,7 @@ final class CodexUsageServiceTests: XCTestCase {
 
         let usage = try CodexUsageService.parseRateLimitsResponse(response)
 
-        XCTAssertEqual(usage.sessionUsage.percentage, 8)
+        XCTAssertEqual(usage.sessionUsage?.percentage, 8)
         XCTAssertNil(usage.weeklyUsage)
         XCTAssertNil(usage.weeklyWindowMinutes)
     }
@@ -117,9 +117,10 @@ final class CodexUsageServiceTests: XCTestCase {
 
         let usage = try CodexUsageService.parseRateLimitsResponse(response, now: now)
 
-        XCTAssertEqual(usage.sessionUsage.percentage, 12)
+        XCTAssertEqual(usage.sessionUsage?.percentage, 12)
         XCTAssertNil(usage.sessionWindowMinutes)
-        XCTAssertGreaterThan(usage.sessionUsage.resetAt.timeIntervalSince(now), 0)
+        let sessionUsage = try XCTUnwrap(usage.sessionUsage)
+        XCTAssertGreaterThan(sessionUsage.resetAt.timeIntervalSince(now), 0)
         XCTAssertEqual(usage.lastUpdated, now)
     }
 
@@ -147,11 +148,91 @@ final class CodexUsageServiceTests: XCTestCase {
 
         let usage = try CodexUsageService.parseRateLimitsResponse(response)
 
-        XCTAssertEqual(usage.sessionUsage.percentage, 7)
+        XCTAssertEqual(usage.sessionUsage?.percentage, 7)
         XCTAssertEqual(usage.sessionWindowMinutes, 300)
         XCTAssertEqual(usage.weeklyUsage?.percentage, 40)
         XCTAssertEqual(usage.weeklyWindowMinutes, 10080)
         XCTAssertEqual(usage.planType, "team")
+    }
+
+    func test_rateLimitResponse_mapsModelSpecificBuckets() throws {
+        let response = """
+        {
+          "id": 1,
+          "result": {
+            "rateLimits": {
+              "primary": {
+                "usedPercent": 28,
+                "windowDurationMins": 300,
+                "resetsAt": 1788378759
+              },
+              "planType": "prolite"
+            },
+            "rateLimitsByLimitId": {
+              "codex": {
+                "limitId": "codex",
+                "primary": {
+                  "usedPercent": 28,
+                  "windowDurationMins": 300,
+                  "resetsAt": 1788378759
+                },
+                "secondary": {
+                  "usedPercent": 16,
+                  "windowDurationMins": 10080,
+                  "resetsAt": 1788856695
+                },
+                "planType": "prolite"
+              },
+              "codex_luna": {
+                "limitId": "codex_luna",
+                "limitName": "Luna",
+                "normalModelSlug": "gpt-5.6-luna",
+                "primary": {
+                  "usedPercent": 4,
+                  "windowDurationMins": 300,
+                  "resetsAt": 1788378759
+                },
+                "secondary": null,
+                "planType": "prolite"
+              }
+            }
+          }
+        }
+        """.data(using: .utf8)!
+
+        let usage = try CodexUsageService.parseRateLimitsResponse(response)
+
+        XCTAssertEqual(usage.buckets.map(\.id), ["codex", "codex_luna"])
+        XCTAssertNil(usage.buckets[0].modeName)
+        XCTAssertEqual(usage.buckets[0].longTermUsage?.percentage, 16)
+        XCTAssertEqual(usage.buckets[1].modeName, "Luna")
+        XCTAssertEqual(usage.buckets[1].sessionUsage?.percentage, 4)
+        XCTAssertNil(usage.buckets[1].longTermUsage)
+        XCTAssertEqual(usage.planType, "prolite")
+    }
+
+    func test_rateLimitResponse_withOnlyWeeklyWindow_doesNotCallItSession() throws {
+        let response = """
+        {
+          "id": 1,
+          "result": {
+            "rateLimits": {
+              "primary": {
+                "usedPercent": 92,
+                "windowDurationMins": 10080,
+                "resetsAt": 1788856695
+              },
+              "planType": "prolite"
+            }
+          }
+        }
+        """.data(using: .utf8)!
+
+        let usage = try CodexUsageService.parseRateLimitsResponse(response)
+
+        XCTAssertNil(usage.sessionUsage)
+        XCTAssertEqual(usage.weeklyUsage?.percentage, 92)
+        XCTAssertEqual(usage.weeklyWindowMinutes, 10_080)
     }
 
     func test_defaultExecutableCandidates_includePATHAndUserLocalBin() {

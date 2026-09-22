@@ -1,4 +1,5 @@
 import Foundation
+import LocalAuthentication
 import Security
 
 enum KeychainItemQuery {
@@ -7,13 +8,16 @@ enum KeychainItemQuery {
         service: String,
         usesDataProtectionKeychain: Bool = true
     ) -> [String: Any] {
-        [
+        let authenticationContext = LAContext()
+        authenticationContext.interactionNotAllowed = true
+
+        return [
             kSecClass as String: kSecClassGenericPassword,
             kSecAttrAccount as String: account,
             kSecAttrService as String: service,
             kSecAttrSynchronizable as String: false,
             kSecUseDataProtectionKeychain as String: usesDataProtectionKeychain,
-            kSecUseAuthenticationUI as String: kSecUseAuthenticationUIFail,
+            kSecUseAuthenticationContext as String: authenticationContext,
         ]
     }
 

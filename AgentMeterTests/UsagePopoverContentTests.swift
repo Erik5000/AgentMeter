@@ -77,9 +77,48 @@ final class UsagePopoverContentTests: XCTestCase {
     func test_codexPlanDisplay_usesFriendlyPlanNamesAndHidesInternalSkus() {
         XCTAssertEqual(CodexPlanDisplay.formatted("plus"), "Plus")
         XCTAssertEqual(CodexPlanDisplay.formatted("self_serve_business_prolite"), "Pro")
+        XCTAssertEqual(CodexPlanDisplay.formatted("prolite"), "Pro Lite")
         XCTAssertEqual(CodexPlanDisplay.formatted("team"), "Team")
         XCTAssertNil(CodexPlanDisplay.formatted("unknown_internal_sku_name"))
         XCTAssertNil(CodexPlanDisplay.formatted(nil))
+    }
+
+    func test_codexModelDisplay_formatsModelSlugsForCompactModeLabels() {
+        XCTAssertEqual(CodexModelDisplay.formatted("gpt-5.6-luna"), "GPT-5.6 Luna")
+        XCTAssertEqual(CodexModelDisplay.formatted("codex_spark"), "Codex Spark")
+    }
+
+    func test_codexBucket_usesModelSlugWhenLimitNameIsGeneric() {
+        let bucket = CodexUsageBucket(
+            id: "codex_luna",
+            limitName: "Codex",
+            modelSlug: "gpt-5.6-luna",
+            sessionUsage: nil,
+            sessionWindowMinutes: nil,
+            longTermUsage: nil,
+            longTermWindowMinutes: nil
+        )
+
+        XCTAssertEqual(bucket.modeName, "GPT-5.6 Luna")
+    }
+
+    func test_popoverLayout_fitsTwoModelGroupsWithoutTheOldCompactHeight() {
+        let height = UsagePopoverLayout.preferredHeight(groupMetricCounts: [2, 2])
+
+        XCTAssertGreaterThan(height, 470)
+        XCTAssertEqual(UsagePopoverLayout.width, 430)
+    }
+
+    func test_popoverLayout_growsForAdditionalModelsAndErrors() {
+        let twoModels = UsagePopoverLayout.preferredHeight(groupMetricCounts: [2, 2])
+        let threeModels = UsagePopoverLayout.preferredHeight(groupMetricCounts: [2, 2, 2])
+        let withError = UsagePopoverLayout.preferredHeight(
+            groupMetricCounts: [2, 2],
+            errorBannerCount: 1
+        )
+
+        XCTAssertGreaterThan(threeModels, twoModels)
+        XCTAssertGreaterThan(withError, twoModels)
     }
 
     func test_usageErrorPresentation_offersSessionRecoveryForAuthFailures() {

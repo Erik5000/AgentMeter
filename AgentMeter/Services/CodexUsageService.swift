@@ -115,26 +115,49 @@ actor CodexUsageService: CodexUsageServiceProtocol {
             throw CodexUsageError.serverError(message)
         }
 
-        guard let limits = response.result?.rateLimits,
-              let primary = limits.primary else {
+        guard let result = response.result else {
             throw CodexUsageError.invalidResponse
         }
 
-        let windows = [primary, limits.secondary].compactMap { $0 }
-        let sorted = windows.sorted { lhs, rhs in
-            (lhs.windowDurationMins ?? .infinity) < (rhs.windowDurationMins ?? .infinity)
+        let multiBucketLimits = result.rateLimitsByLimitId?
+            .compactMap { key, limits -> CodexUsageBucket? in
+                limits.usageBucket(fallbackID: key, now: now)
+            }
+            .sorted { lhs, rhs in
+                let lhsIsDefault = lhs.id.caseInsensitiveCompare("codex") == .orderedSame
+                let rhsIsDefault = rhs.id.caseInsensitiveCompare("codex") == .orderedSame
+                if lhsIsDefault != rhsIsDefault {
+                    return lhsIsDefault
+                }
+                let lhsName = lhs.modeName ?? lhs.id
+                let rhsName = rhs.modeName ?? rhs.id
+                return lhsName.localizedCaseInsensitiveCompare(rhsName) == .orderedAscending
+            } ?? []
+
+        let buckets: [CodexUsageBucket]
+        if multiBucketLimits.isEmpty {
+            guard let legacyBucket = result.rateLimits?.usageBucket(fallbackID: "codex", now: now) else {
+                throw CodexUsageError.invalidResponse
+            }
+            buckets = [legacyBucket]
+        } else {
+            buckets = multiBucketLimits
         }
-        let session = sorted[0]
-        let weekly = sorted.dropFirst().first
 
         return CodexUsageData(
-            sessionUsage: session.usageLimit(now: now),
-            sessionWindowMinutes: session.windowDurationMins,
-            weeklyUsage: weekly?.usageLimit(now: now),
-            weeklyWindowMinutes: weekly?.windowDurationMins,
-            planType: limits.planType,
+            buckets: buckets,
+            planType: result.rateLimits?.planType ?? bucketsPlanType(result.rateLimitsByLimitId),
             lastUpdated: now
         )
+    }
+
+    private nonisolated static func bucketsPlanType(
+        _ buckets: [String: RateLimitsRPCResponse.RateLimits]?
+    ) -> String? {
+        buckets?
+            .sorted { $0.key.localizedCaseInsensitiveCompare($1.key) == .orderedAscending }
+            .compactMap { $0.value.planType }
+            .first
     }
 
     private var appVersion: String {
@@ -251,12 +274,50 @@ private struct RateLimitsRPCResponse: Decodable {
 
     struct ResultPayload: Decodable {
         let rateLimits: RateLimits?
+        let rateLimitsByLimitId: [String: RateLimits]?
     }
 
     struct RateLimits: Decodable {
         let primary: Window?
         let secondary: Window?
         let planType: String?
+        let limitId: String?
+        let limitName: String?
+        let normalModelSlug: String?
+
+        func usageBucket(fallbackID: String, now: Date) -> CodexUsageBucket? {
+            let windows = [primary, secondary].compactMap { $0 }
+            guard !windows.isEmpty else { return nil }
+
+            let sorted = windows.sorted { lhs, rhs in
+                (lhs.windowDurationMins ?? .infinity) < (rhs.windowDurationMins ?? .infinity)
+            }
+
+            let session: Window?
+            let longTerm: Window?
+            if sorted.count > 1 {
+                session = sorted.first
+                longTerm = sorted.last
+            } else if let only = sorted.first,
+                      let duration = only.windowDurationMins,
+                      duration >= 24 * 60 {
+                session = nil
+                longTerm = only
+            } else {
+                session = sorted.first
+                longTerm = nil
+            }
+
+            return CodexUsageBucket(
+                id: limitId ?? fallbackID,
+                limitName: limitName,
+                modelSlug: normalModelSlug,
+                sessionUsage: session?.usageLimit(now: now),
+                sessionWindowMinutes: session?.windowDurationMins,
+                longTermUsage: longTerm?.usageLimit(now: now),
+                longTermWindowMinutes: longTerm?.windowDurationMins
+            )
+        }
     }
 
     struct Window: Decodable {

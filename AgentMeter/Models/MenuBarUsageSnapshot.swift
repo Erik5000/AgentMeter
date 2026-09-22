@@ -31,11 +31,15 @@ struct MenuBarUsageSnapshot: Equatable, Sendable {
         }
         let claudeStatus = claudeDisplayedPercentage.map(UsageStatus.forPercentage)
         let showsCodex = isCodexUsageShown
-        let codexSession = showsCodex ? codex?.sessionUsage.percentage : nil
-        let codexWeekly = showsCodex ? codex?.weeklyUsage?.percentage : nil
+        let codexSession = showsCodex
+            ? codex?.buckets.compactMap { $0.sessionUsage?.percentage }.max()
+            : nil
+        let codexWeekly = showsCodex
+            ? codex?.buckets.compactMap { $0.longTermUsage?.percentage }.max()
+            : nil
         let codexDisplayedPercentage: Double? = {
             guard showsCodex, let codex else { return nil }
-            return max(codex.sessionUsage.percentage, codex.weeklyUsage?.percentage ?? 0)
+            return codex.usageLimits.map(\.percentage).max()
         }()
         let codexStatus = codexDisplayedPercentage.map(UsageStatus.forPercentage)
 
@@ -80,7 +84,7 @@ struct MenuBarUsageSnapshot: Equatable, Sendable {
                 codexDisplayedPercentage: codexDisplayedPercentage,
                 codexSession: codexSession,
                 codexWeekly: codexWeekly,
-                hasCodexData: codex != nil
+                codex: codex
             )
         )
     }
@@ -93,7 +97,7 @@ struct MenuBarUsageSnapshot: Equatable, Sendable {
         codexDisplayedPercentage: Double?,
         codexSession: Double?,
         codexWeekly: Double?,
-        hasCodexData: Bool
+        codex: CodexUsageData?
     ) -> String {
         var blocks: [String] = [
             providerBlock(
@@ -105,14 +109,12 @@ struct MenuBarUsageSnapshot: Equatable, Sendable {
         ]
 
         if showsCodex {
-            blocks.append(
-                providerBlock(
-                    name: "Codex",
-                    session: codexSession,
-                    weekly: codexWeekly,
-                    hasAnyValue: hasCodexData && codexDisplayedPercentage != nil
-                )
-            )
+            blocks.append(codexProviderBlock(
+                codex,
+                displayedPercentage: codexDisplayedPercentage,
+                session: codexSession,
+                weekly: codexWeekly
+            ))
         }
 
         return blocks.joined(separator: "\n")
@@ -134,6 +136,41 @@ struct MenuBarUsageSnapshot: Equatable, Sendable {
         }
         if let weekly {
             lines.append("Week \(Int(weekly))%")
+        }
+        return lines.joined(separator: "\n")
+    }
+
+    private static func codexProviderBlock(
+        _ codex: CodexUsageData?,
+        displayedPercentage: Double?,
+        session: Double?,
+        weekly: Double?
+    ) -> String {
+        guard let codex, displayedPercentage != nil else {
+            return "Codex\nCan't load"
+        }
+
+        if codex.buckets.count == 1, codex.buckets[0].modeName == nil {
+            return providerBlock(
+                name: "Codex",
+                session: session,
+                weekly: weekly,
+                hasAnyValue: true
+            )
+        }
+
+        var lines = ["Codex"]
+        for bucket in codex.buckets {
+            let mode = bucket.modeName ?? "Shared"
+            if let usage = bucket.sessionUsage {
+                lines.append("\(mode) · Session \(Int(usage.percentage))%")
+            }
+            if let usage = bucket.longTermUsage {
+                let window = UsageWindowTitle.comparisonWeekly(
+                    codexMinutes: bucket.longTermWindowMinutes
+                )
+                lines.append("\(mode) · \(window) \(Int(usage.percentage))%")
+            }
         }
         return lines.joined(separator: "\n")
     }

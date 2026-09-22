@@ -1,4 +1,5 @@
 import XCTest
+import LocalAuthentication
 import Security
 @testable import AgentMeter
 
@@ -13,10 +14,8 @@ final class KeychainItemQueryTests: XCTestCase {
         XCTAssertEqual(query[kSecAttrAccount as String] as? String, "default")
         XCTAssertEqual(query[kSecAttrService as String] as? String, AppIdentity.keychainService)
         XCTAssertEqual(query[kSecUseDataProtectionKeychain as String] as? Bool, true)
-        XCTAssertEqual(
-            query[kSecUseAuthenticationUI as String] as? NSString,
-            kSecUseAuthenticationUIFail as NSString
-        )
+        let authenticationContext = query[kSecUseAuthenticationContext as String] as? LAContext
+        XCTAssertEqual(authenticationContext?.interactionNotAllowed, true)
         XCTAssertNil(query[kSecAttrAccessGroup as String])
         XCTAssertFalse(
             query.values.contains { "\($0)".contains("$(AppIdentifierPrefix)") }
@@ -43,9 +42,7 @@ final class KeychainItemQueryTests: XCTestCase {
         XCTAssertEqual(query[kSecReturnData as String] as? Bool, true)
         XCTAssertEqual(query[kSecMatchLimit as String] as? NSString, kSecMatchLimitOne as NSString)
         XCTAssertEqual(query[kSecUseDataProtectionKeychain as String] as? Bool, true)
-        XCTAssertEqual(
-            query[kSecUseAuthenticationUI as String] as? NSString,
-            kSecUseAuthenticationUIFail as NSString
-        )
+        let authenticationContext = query[kSecUseAuthenticationContext as String] as? LAContext
+        XCTAssertEqual(authenticationContext?.interactionNotAllowed, true)
     }
 }

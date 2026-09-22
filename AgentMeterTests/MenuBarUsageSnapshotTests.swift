@@ -77,6 +77,55 @@ final class MenuBarUsageSnapshotTests: XCTestCase {
         XCTAssertEqual(snapshot.status, .critical)
     }
 
+    func test_withModelSpecificCodexLimits_usesHighestBucketAndNamesModesInTooltip() {
+        let codex = CodexUsageData(
+            buckets: [
+                CodexUsageBucket(
+                    id: "codex",
+                    limitName: nil,
+                    modelSlug: nil,
+                    sessionUsage: UsageLimit(
+                        utilization: 12,
+                        resetAt: Date().addingTimeInterval(3600)
+                    ),
+                    sessionWindowMinutes: 300,
+                    longTermUsage: UsageLimit(
+                        utilization: 22,
+                        resetAt: Date().addingTimeInterval(86_400)
+                    ),
+                    longTermWindowMinutes: 10_080
+                ),
+                CodexUsageBucket(
+                    id: "codex_luna",
+                    limitName: "Luna",
+                    modelSlug: "gpt-5.6-luna",
+                    sessionUsage: UsageLimit(
+                        utilization: 68,
+                        resetAt: Date().addingTimeInterval(3600)
+                    ),
+                    sessionWindowMinutes: 300,
+                    longTermUsage: nil,
+                    longTermWindowMinutes: nil
+                )
+            ],
+            planType: "prolite",
+            lastUpdated: Date()
+        )
+
+        let snapshot = MenuBarUsageSnapshot.make(
+            claude: nil,
+            codex: codex,
+            isCodexUsageShown: true,
+            isLoading: false
+        )
+
+        XCTAssertEqual(snapshot.codexSession, 68)
+        XCTAssertEqual(snapshot.codexWeekly, 22)
+        XCTAssertEqual(snapshot.codexDisplayedPercentage, 68)
+        XCTAssertTrue(snapshot.tooltip.contains("Shared · Session 12%"))
+        XCTAssertTrue(snapshot.tooltip.contains("Luna · Session 68%"))
+    }
+
     func test_withCodexEnabledButNoData_stillReservesTheCodexColumn() {
         let snapshot = MenuBarUsageSnapshot.make(
             claude: makeClaudeUsage(session: 40, weekly: 12),

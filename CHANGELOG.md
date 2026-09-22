@@ -7,10 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- Display shared and model-specific Codex quota buckets when the local Codex app reports them.
+
 ### Changed
 - Forked from ClaudeMeter; product name is AgentMeter.
 - Renamed the Xcode project, scheme, Swift module, and source folders from ClaudeMeter to AgentMeter.
 - Tracks Codex usage alongside Claude.
+- Grouped session and long-term meters into full-width cards for each provider/model, and expanded the popover to fit them without scrolling.
 - Cache export path is `~/.agentmeter/usage.json` (Claude usage only).
 - GitHub Releases are unsigned; README documents the Gatekeeper bypass for first launch.
 
@@ -21,6 +25,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Decode Codex windows with null `resetsAt` / `windowDurationMins`.
 - Keep overlapping refreshes (including the Codex toggle) instead of dropping them.
 - Treat missing Claude/Codex data as unavailable in the menu bar, not 0%.
+- Classify a lone long-duration Codex window as long-term usage instead of a session limit.
+- Show an unreported Codex window as absent instead of as a loading failure.
+- Use the current non-interactive Keychain authentication API and make notification delegate isolation explicit.
 
 ## [1.4.0] - 2026-05-19
 

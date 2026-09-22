@@ -153,7 +153,7 @@ final class NotificationService: NSObject, NotificationServiceProtocol, UNUserNo
 
     // MARK: - UNUserNotificationCenterDelegate
 
-    func userNotificationCenter(
+    nonisolated func userNotificationCenter(
         _ center: UNUserNotificationCenter,
         didReceive response: UNNotificationResponse,
         withCompletionHandler completionHandler: @escaping () -> Void
